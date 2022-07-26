@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+# Set the title
+PS1=$
+PROMPT_COMMAND=
+echo -en "\033]0;assegai\a"
+
+# Scripts path
+SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
+#assegai_path="${SCRIPT_DIR:0:-7}"
+assegai_path=$(dirname "${SCRIPT_DIR}")
+src_dir="${assegai_path}/src"
+
+function cleanup()
+{
+  /bin/stty echo
+  tput cnorm
+}
+
+trap cleanup EXIT
+
+php "${src_dir}/main.php" "${@:1}"
