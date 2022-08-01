@@ -10,5 +10,5 @@ interface IArgumentHost
 
   public function getArgs(): array;
 
-  public function getArgsById(int $id): array;
+  public function getArgsById(int $id): mixed;
 }
