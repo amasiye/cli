@@ -4,12 +4,14 @@ namespace Assegai\Cli\Core;
 
 use Assegai\Cli\Attributes\Command;
 use Assegai\Cli\Core\Console\Input\InputArgument;
+use Assegai\Cli\Enumerations\Color\Color;
 use Assegai\Cli\Enumerations\ValueRequirementType;
 use Assegai\Cli\Exceptions\ConsoleExceptions;
 use Assegai\Cli\Interfaces\IArgumentHost;
 use Assegai\Cli\Interfaces\IComparable;
 use Assegai\Cli\Interfaces\IExecutable;
 use Assegai\Cli\Util\Logger\Log;
+use Assegai\Cli\Util\Paths;
 use Closure;
 use ReflectionAttribute;
 use ReflectionClass;
@@ -98,6 +100,20 @@ abstract class AbstractCommand implements IExecutable, IComparable
     }
 
     $this->availableOptions[] = new CommandOption(name: 'help', alias: 'h', type: ValueRequirementType::NOT_ALLOWED);
+  }
+
+  protected function getHeader(): string
+  {
+    $content = file_get_contents(sprintf("%s/header.txt", Paths::getResourceDirectory()));
+    $output = Color::RED;
+    $output .= $content;
+    $output .= Color::RESET;
+    return $output;
+  }
+
+  protected function printHeader(): void
+  {
+    echo $this->getHeader() . PHP_EOL;
   }
 
   public function configure(): void

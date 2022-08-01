@@ -25,4 +25,9 @@ final class Paths
   {
     return dirname(__DIR__, 2);
   }
+
+  public static function getResourceDirectory(): string
+  {
+    return self::getBaseDirectory() . '/res';
+  }
 }
