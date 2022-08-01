@@ -2,7 +2,10 @@
 
 namespace Assegai\Cli\Core;
 
+use Assegai\Cli\Exceptions\InsufficientDetailsException;
+use Assegai\Cli\Exceptions\NotFoundException;
 use Assegai\Cli\Interfaces\IExecutable;
+use PHPUnit\Util\Exception;
 
 /**
  *
@@ -15,10 +18,36 @@ final class App
   protected array $commands = [];
 
   /**
-   *
+   * @var array
+   */
+  protected array $searchDirectories = [];
+
+  /**
+   * @var ActionContext
+   */
+  protected ActionContext $context;
+
+  /**
+   * Constructs the app.
    */
   public final function __construct()
   {
+    $this->context = ActionContext::getInstance(app: $this);
+
+    set_exception_handler(function($e) {
+      if ($e instanceof NotFoundException)
+      {
+        echo $e->getMessage();
+      }
+      else if ($e instanceof InsufficientDetailsException)
+      {
+        echo $e->getMessage();
+      }
+      else
+      {
+        echo $e->getMessage();
+      }
+    });
   }
 
   /**
@@ -42,30 +71,62 @@ final class App
    */
   public function run(): void
   {
-    // Parse Arguments
-    // Select handler
-    // Execute
+    $commandName = $this->context->getActionName();
+    /** @var AbstractCommand $command */
+    $command = $this->commands[$commandName] ?? $this->commands['help'];
+
+    $command->parseArguments($this->context->getArgs());
+    if ($secondArg = $this->context->getArgsById(0))
+    {
+      if (in_array($secondArg, ['--help', '-h']))
+      {
+        $command->help();
+      }
+    }
+    $command->execute($this->context);
+  }
+
+  /**
+   * @return IExecutable[]
+   */
+  public function getCommands(): array
+  {
+    return $this->commands;
   }
 
   /**
    * @param AbstractCommand|IExecutable $command
-   * @return int
+   * @return App
    */
-  public function add(AbstractCommand|IExecutable $command): int
+  public function add(AbstractCommand|IExecutable $command): App
   {
     if ($this->doesNotHave($command))
     {
-      $this->commands[] = $command;
+      $this->commands[$command->name] = $command;
     }
 
-    return count($this->commands);
+    return $this;
+  }
+
+  /**
+   * @param array<AbstractCommand|IExecutable> $commands
+   * @return $this
+   */
+  public function addAll(array $commands): App
+  {
+    foreach ($commands as $command)
+    {
+      $this->add($command);
+    }
+
+    return $this;
   }
 
   /**
    * @param AbstractCommand|IExecutable $command
-   * @return int
+   * @return App
    */
-  public function remove(AbstractCommand|IExecutable $command): int
+  public function remove(AbstractCommand|IExecutable $command): App
   {
     if ($this->has($command))
     {
@@ -74,15 +135,20 @@ final class App
       });
     }
 
-    return count($this->commands);
+    return $this;
   }
 
   /**
-   * @param AbstractCommand|IExecutable $command
+   * @param AbstractCommand|IExecutable|string $command
    * @return bool
    */
-  public function has(AbstractCommand|IExecutable $command): bool
+  public function has(AbstractCommand|IExecutable|string $command): bool
   {
+    if (is_string($command))
+    {
+      return key_exists($command, $this->commands);
+    }
+
     foreach ($this->commands as $value)
     {
       if ($value->equals($command))
