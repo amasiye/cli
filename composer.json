@@ -10,7 +10,8 @@
         "monolog/monolog": "^3.2"
     },
     "require-dev": {
-        "codeception/codeception": "*"
+        "codeception/codeception": "*",
+        "codeception/verify": "^2.2"
     },
     "license": "MIT",
     "autoload": {
