@@ -5,7 +5,9 @@
     "require": {
         "atatusoft/cli-menus": ">=1.0",
         "php": ">=8.1",
-        "symfony/console": ">=3.0"
+        "symfony/console": ">=3.0",
+        "plejus/pluralize": "^1.0",
+        "monolog/monolog": "^3.2"
     },
     "require-dev": {
         "codeception/codeception": "*"
