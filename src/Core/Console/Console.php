@@ -13,7 +13,7 @@ class Console
 
   public static function print(string $message, string $color = Color::RESET): void
   {
-    printf("%s%s%s", $color, $message, Color::RESET);
+    printf("%s%s%s" . PHP_EOL, $color, $message, Color::RESET);
   }
 
   public static function log(string $message, bool $exit = false): void

@@ -2,8 +2,9 @@
 
 namespace Assegai\Cli\Core;
 
+use Assegai\Cli\Core\Console\Console;
+use Assegai\Cli\Exceptions\ConsoleExceptions;
 use Assegai\Cli\Exceptions\InsufficientDetailsException;
-use Assegai\Cli\Exceptions\InvalidOptionException;
 use Assegai\Cli\Exceptions\NotFoundException;
 use Assegai\Cli\Interfaces\IExecutable;
 
@@ -16,6 +17,11 @@ final class App
    * @var IExecutable[] $commands
    */
   protected array $commands = [];
+
+  /**
+   * @var string[] $commands
+   */
+  protected array $shortNames = [];
 
   /**
    * @var array
@@ -37,15 +43,15 @@ final class App
     set_exception_handler(function($e) {
       if ($e instanceof NotFoundException)
       {
-        echo $e->getMessage();
+        echo $e->getMessage() . PHP_EOL;
       }
       else if ($e instanceof InsufficientDetailsException)
       {
-        echo $e->getMessage();
+        echo $e->getMessage() . PHP_EOL;
       }
       else
       {
-        echo $e->getMessage();
+        echo $e->getMessage() . PHP_EOL;
       }
     });
   }
@@ -68,23 +74,29 @@ final class App
 
   /**
    * @return void
-   * @throws InvalidOptionException
    */
   public function run(): void
   {
-    $commandName = $this->context->getActionName();
-    /** @var AbstractCommand $command */
-    $command = $this->commands[$commandName] ?? $this->commands['help'];
-    $command->configure();
-    $command->parseArguments($this->context->getArgs());
-    if ($secondArg = $this->context->getArgsById(0))
+    try
     {
-      if (in_array($secondArg, ['--help', '-h']))
+      $commandName = $this->context->getActionName();
+      /** @var AbstractCommand $command */
+      $command = $this->commands[$commandName] ?? $this->commands[$this->shortNames[$commandName]] ?? $this->commands['help'];
+      $command->configure();
+      $command->parseArguments($this->context->getArgs());
+      if ($secondArg = $this->context->getArgsById(0))
       {
-        $command->help();
+        if (in_array($secondArg, ['--help', '-h']))
+        {
+          $command->help();
+        }
       }
+      $command->execute($this->context);
     }
-    $command->execute($this->context);
+    catch (ConsoleExceptions $e)
+    {
+      Console::error($e);
+    }
   }
 
   /**
@@ -106,7 +118,7 @@ final class App
       $this->commands[$command->name] = $command;
       if ($command->shortName)
       {
-        $this->commands[$command->shortName] = $command;
+        $this->shortNames[$command->shortName] = $command->name;
       }
     }
 
@@ -151,7 +163,7 @@ final class App
   {
     if (is_string($command))
     {
-      return key_exists($command, $this->commands);
+      return key_exists($command, $this->commands) || in_array($command, $this->shortNames);
     }
 
     foreach ($this->commands as $value)

@@ -3,6 +3,7 @@
 
 require dirname(__DIR__) . '/vendor/autoload.php';
 
+use Assegai\Cli\Commands\GenerateCommand;
 use Assegai\Cli\Commands\HelpCommand;
 use Assegai\Cli\Commands\InfoCommand;
 use Assegai\Cli\Commands\ListCommand;
@@ -18,6 +19,7 @@ function bootstrap(): void
 
   $app
     ->addAll([
+      new GenerateCommand(),
       new HelpCommand(),
       new InfoCommand(),
       new ListCommand(),
