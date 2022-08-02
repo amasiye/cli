@@ -2,13 +2,12 @@
 
 namespace Assegai\Cli\Core;
 
-use Assegai\Cli\Enumerations\ValueRequirementType;
 use Assegai\Cli\Enumerations\ValueType;
 
 /**
  *
  */
-final class CommandOption
+final class CommandArgument
 {
   /**
    * @var mixed|null
@@ -18,20 +17,26 @@ final class CommandOption
   /**
    * @param string $name
    * @param string|null $alias
-   * @param ValueRequirementType $type
+   * @param bool $isRequired
    * @param string|null $description
    * @param ValueType $valueType
-   * @param mixed|null $defaultValue
+   * @param mixed|false $defaultValue
+   * @param string|null $enum
    */
   public function __construct(
-    public readonly string  $name,
+    public readonly string $name,
     public readonly ?string $alias = null,
-    public readonly ValueRequirementType $type = ValueRequirementType::NOT_ALLOWED,
+    public readonly bool $isRequired = false,
     public readonly ?string $description = null,
-    public readonly ValueType $valueType = ValueType::STRING,
-    public readonly mixed $defaultValue = null
+    public readonly ValueType $valueType = ValueType::BOOLEAN,
+    public readonly mixed $defaultValue = false,
+    public readonly ?string $enum = null,
   )
   {
+    if ($this->valueType === ValueType::ENUM)
+    {
+      // TODO: Validate default value against enum::cases()
+    }
   }
 
   /**
@@ -57,10 +62,5 @@ final class CommandOption
   public function setValue(mixed $value): void
   {
     $this->value = $value;
-  }
-
-  public function acceptsValue(): bool
-  {
-    return in_array($this->type, [ValueRequirementType::REQUIRED, ValueRequirementType::OPTIONAL]);
   }
 }
