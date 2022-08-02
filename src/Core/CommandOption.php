@@ -3,6 +3,7 @@
 namespace Assegai\Cli\Core;
 
 use Assegai\Cli\Enumerations\ValueRequirementType;
+use Assegai\Cli\Enumerations\ValueType;
 
 /**
  *
@@ -18,11 +19,17 @@ final class CommandOption
    * @param string $name
    * @param string|null $alias
    * @param ValueRequirementType $type
+   * @param string|null $description
+   * @param ValueType $valueType
+   * @param mixed|null $defaultValue
    */
   public function __construct(
     public readonly string  $name,
     public readonly ?string $alias = null,
-    public readonly ValueRequirementType $type = ValueRequirementType::NOT_ALLOWED
+    public readonly ValueRequirementType $type = ValueRequirementType::NOT_ALLOWED,
+    public readonly ?string $description = null,
+    public readonly ValueType $valueType = ValueType::STRING,
+    public readonly mixed $defaultValue = null
   )
   {
   }
@@ -50,5 +57,10 @@ final class CommandOption
   public function setValue(mixed $value): void
   {
     $this->value = $value;
+  }
+
+  public function acceptsValue(): bool
+  {
+    return in_array($this->type, [ValueRequirementType::REQUIRED, ValueRequirementType::OPTIONAL]);
   }
 }
