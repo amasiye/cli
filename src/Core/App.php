@@ -3,9 +3,9 @@
 namespace Assegai\Cli\Core;
 
 use Assegai\Cli\Exceptions\InsufficientDetailsException;
+use Assegai\Cli\Exceptions\InvalidOptionException;
 use Assegai\Cli\Exceptions\NotFoundException;
 use Assegai\Cli\Interfaces\IExecutable;
-use PHPUnit\Util\Exception;
 
 /**
  *
@@ -68,13 +68,14 @@ final class App
 
   /**
    * @return void
+   * @throws InvalidOptionException
    */
   public function run(): void
   {
     $commandName = $this->context->getActionName();
     /** @var AbstractCommand $command */
     $command = $this->commands[$commandName] ?? $this->commands['help'];
-
+    $command->configure();
     $command->parseArguments($this->context->getArgs());
     if ($secondArg = $this->context->getArgsById(0))
     {
@@ -100,9 +101,13 @@ final class App
    */
   public function add(AbstractCommand|IExecutable $command): App
   {
-    if ($this->doesNotHave($command))
+    if ($this->doesNotHaveCommand($command))
     {
       $this->commands[$command->name] = $command;
+      if ($command->shortName)
+      {
+        $this->commands[$command->shortName] = $command;
+      }
     }
 
     return $this;
@@ -128,7 +133,7 @@ final class App
    */
   public function remove(AbstractCommand|IExecutable $command): App
   {
-    if ($this->has($command))
+    if ($this->hasCommand($command))
     {
       $this->commands = array_filter($this->commands, function($value) use ($command) {
         return !$value->equals($command);
@@ -142,7 +147,7 @@ final class App
    * @param AbstractCommand|IExecutable|string $command
    * @return bool
    */
-  public function has(AbstractCommand|IExecutable|string $command): bool
+  public function hasCommand(AbstractCommand|IExecutable|string $command): bool
   {
     if (is_string($command))
     {
@@ -164,8 +169,8 @@ final class App
    * @param AbstractCommand|IExecutable $command
    * @return bool
    */
-  public function doesNotHave(AbstractCommand|IExecutable $command): bool
+  public function doesNotHaveCommand(AbstractCommand|IExecutable $command): bool
   {
-    return !$this->has($command);
+    return !$this->hasCommand($command);
   }
 }
