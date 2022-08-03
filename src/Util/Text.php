@@ -5,9 +5,9 @@ namespace Assegai\Cli\Util;
 use plejus\PhpPluralize\Inflector;
 
 /**
- * The String class represents character strings.
+ * The Text class represents character strings.
  */
-class CharacterSequence
+class Text
 {
   /**
    * Initializes a newly created String object so that it represents the same sequence of characters
@@ -48,32 +48,32 @@ class CharacterSequence
 
   /**
    * Compares two strings lexicographically.
-   * @param CharacterSequence $other
+   * @param Text $other
    * @return int Returns less than 0 if instance is less than other; > 0 if instance is greater than other,
    * and 0 if they are equal.
    */
-  public function compareTo(CharacterSequence $other): int
+  public function compareTo(Text $other): int
   {
     return strcmp($this->value, strval($other));
   }
 
   /**
    * Compares two strings lexicographically.
-   * @param CharacterSequence $other
+   * @param Text $other
    * @return int Returns less than 0 if instance is less than other; > 0 if instance is greater than other,
    * and 0 if they are equal.
    */
-  public function compareToIgnoreCase(CharacterSequence $other): int
+  public function compareToIgnoreCase(Text $other): int
   {
     return strcmp(strtolower($this->value), strtolower(strval($other)));
   }
 
   /**
    * Concatenates the specified string to the end of this string.
-   * @param CharacterSequence $other
-   * @return CharacterSequence
+   * @param Text $other
+   * @return Text
    */
-  public function concat(CharacterSequence $other): self
+  public function concat(Text $other): self
   {
     $value = $this->value . $other;
 
@@ -81,40 +81,40 @@ class CharacterSequence
   }
 
   /**
-   * @param CharacterSequence $characterSequence
+   * @param Text $characterSequence
    * @return bool
    */
-  public function contains(CharacterSequence $characterSequence): bool
+  public function contains(Text $characterSequence): bool
   {
     return str_contains($this->value, strval($characterSequence));
   }
 
   /**
    * Compares this string to the specified CharSequence.
-   * @param CharacterSequence $characterSequence
+   * @param Text $characterSequence
    * @return bool
    */
-  public function equals(CharacterSequence $characterSequence): bool
+  public function equals(Text $characterSequence): bool
   {
     return $this->compareTo($characterSequence) === 0;
   }
 
   /**
    * Compares this string to the specified CharSequence.
-   * @param CharacterSequence $characterSequence
+   * @param Text $characterSequence
    * @return bool
    */
-  public function equalsIgnoreCase(CharacterSequence $characterSequence): bool
+  public function equalsIgnoreCase(Text $characterSequence): bool
   {
     return $this->compareToIgnoreCase($characterSequence) === 0;
   }
 
   /**
-   * @param CharacterSequence|string $ch
+   * @param Text|string $ch
    * @param int $fromIndex
    * @return int
    */
-  public function indexOf(CharacterSequence|string $ch, int $fromIndex = 0): int
+  public function indexOf(Text|string $ch, int $fromIndex = 0): int
   {
     return strpos($this->value, $ch, $fromIndex);
   }
@@ -148,9 +148,9 @@ class CharacterSequence
   /**
    * Replaces each subsequence of this CharacterSequence that matches the literal target sequence with the
    * specified literal replacement sequence.
-   * @return CharacterSequence
+   * @return Text
    */
-  public function replace(string|CharacterSequence $target, string|CharacterSequence $replacement): self
+  public function replace(string|Text $target, string|Text $replacement): self
   {
     $result = str_replace((string)$target, (string)$replacement, (string)$this);
     return new self($result);
@@ -179,22 +179,22 @@ class CharacterSequence
   }
 
   /**
-   * @param string|CharacterSequence $prefix
+   * @param string|Text $prefix
    * @param int $offset
    * @return bool
    */
-  public function startsWith(string|CharacterSequence $prefix, int $offset = 0): bool
+  public function startsWith(string|Text $prefix, int $offset = 0): bool
   {
     $haystack = substr((string)$this, $offset);
     return str_starts_with($haystack, (string)$prefix);
   }
 
   /**
-   * @param string|CharacterSequence $suffix
+   * @param string|Text $suffix
    * @param int $offset
    * @return bool
    */
-  public function endsWith(string|CharacterSequence $suffix, int $offset = 0): bool
+  public function endsWith(string|Text $suffix, int $offset = 0): bool
   {
     $haystack = substr((string)$this, $offset);
     return str_ends_with($haystack, (string)$suffix);
@@ -203,53 +203,53 @@ class CharacterSequence
   /**
    * @param int $beginIndex
    * @param int|null $length
-   * @return CharacterSequence|string
+   * @return Text|string
    */
-  public function substring(int $beginIndex, ?int $length = null): CharacterSequence|string
+  public function substring(int $beginIndex, ?int $length = null): Text|string
   {
     return substr((string)$this, $beginIndex, $length);
   }
 
   /**
-   * @return CharacterSequence
+   * @return Text
    */
-  public function toLowerCase(): CharacterSequence
+  public function toLowerCase(): Text
   {
-    return new CharacterSequence(strtolower($this));
+    return new Text(strtolower($this));
   }
 
   /**
-   * @return CharacterSequence
+   * @return Text
    */
-  public function toUpperCase(): CharacterSequence
+  public function toUpperCase(): Text
   {
-    return new CharacterSequence(strtoupper($this));
+    return new Text(strtoupper($this));
   }
 
   /**
    * @param string $characters
-   * @return CharacterSequence
+   * @return Text
    */
-  public function trim(string $characters = " \t\n\r\0\x0B"): CharacterSequence
+  public function trim(string $characters = " \t\n\r\0\x0B"): Text
   {
-    return new CharacterSequence(trim($this, $characters));
+    return new Text(trim($this, $characters));
   }
 
   /**
    * @param mixed $target
-   * @return CharacterSequence
+   * @return Text
    */
-  public function valueOf(mixed $target): CharacterSequence
+  public function valueOf(mixed $target): Text
   {
-    return new CharacterSequence(strval($target));
+    return new Text(strval($target));
   }
 
   /**
    * @param string $format
    * @param ...$args
-   * @return CharacterSequence
+   * @return Text
    */
-  public static function format(string $format, ...$args): CharacterSequence
+  public static function format(string $format, ...$args): Text
   {
     return call_user_func_array('sprintf', [$format, ...$args]);
   }
