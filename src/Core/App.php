@@ -43,15 +43,15 @@ final class App
     set_exception_handler(function($e) {
       if ($e instanceof NotFoundException)
       {
-        echo $e->getMessage() . PHP_EOL;
+        Console::error($e->getMessage());
       }
       else if ($e instanceof InsufficientDetailsException)
       {
-        echo $e->getMessage() . PHP_EOL;
+        Console::error($e->getMessage());
       }
       else
       {
-        echo $e->getMessage() . PHP_EOL;
+        Console::error($e->getMessage());
       }
     });
   }
@@ -83,7 +83,6 @@ final class App
       /** @var AbstractCommand $command */
       $command = $this->commands[$commandName] ?? $this->commands[$this->shortNames[$commandName]] ?? $this->commands['help'];
       $command->configure();
-      $command->parseArguments($this->context->getArgs());
       if ($secondArg = $this->context->getArgsById(0))
       {
         if (in_array($secondArg, ['--help', '-h']))
@@ -91,11 +90,12 @@ final class App
           $command->help();
         }
       }
+      $command->parseArguments($this->context->getArgs());
       $command->execute($this->context);
     }
     catch (ConsoleExceptions $e)
     {
-      Console::error($e);
+      Console::error($e->getMessage());
     }
   }
 
