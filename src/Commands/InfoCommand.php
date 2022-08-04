@@ -7,6 +7,7 @@ use Assegai\Cli\Core\AbstractCommand;
 use Assegai\Cli\Enumerations\Color\Color;
 use Assegai\Cli\Exceptions\ConsoleExceptions;
 use Assegai\Cli\Interfaces\IArgumentHost;
+use Assegai\Cli\Util\Paths;
 
 #[Command(name: 'info', usage: 'assegai info|i', shortName: 'i', description: 'Display Assegai project details.')]
 class InfoCommand extends AbstractCommand
@@ -42,8 +43,11 @@ class InfoCommand extends AbstractCommand
       printf("%-25s: %s%s%s\n", $key, Color::LIGHT_BLUE, trim($value), Color::RESET);
     }
 
-    printf("\n%s[Assegai Platform Information]%s\n", Color::GREEN, Color::RESET);
-    echo shell_exec('composer show | grep assegaiphp') . PHP_EOL;
+    if ($platformInfo = shell_exec('composer show | grep assegaiphp'))
+    {
+      printf("\n%s[Assegai Platform Information]%s\n", Color::GREEN, Color::RESET);
+      echo $platformInfo . PHP_EOL;
+    }
 
     return Command::SUCCESS;
   }
@@ -53,6 +57,12 @@ class InfoCommand extends AbstractCommand
    */
   public function getFrameworkVersion(): string
   {
-    return exec("composer show assegaiphp/assegai | grep versions") . "\n";
+    $packageName = "assegaiphp/core";
+    if (file_exists(Paths::getWorkingDirectory() . "/vendor/$packageName"))
+    {
+      return exec("composer show $packageName | grep versions") . "\n";
+    }
+
+    return "\n";
   }
 }
