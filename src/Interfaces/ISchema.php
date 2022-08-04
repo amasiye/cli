@@ -2,7 +2,7 @@
 
 namespace Assegai\Cli\Interfaces;
 
-interface IBuildable
+interface ISchema
 {
   public function build(object $options): void;
 }
