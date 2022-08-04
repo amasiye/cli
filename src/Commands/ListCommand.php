@@ -12,7 +12,7 @@ use Assegai\Cli\Interfaces\IExecutionContext;
   name: 'list',
   usage: 'list',
   shortName: 'l',
-  description: 'Prints a list of available commands'
+  description: 'Prints a list of available commands.'
 )]
 class ListCommand extends AbstractCommand
 {
