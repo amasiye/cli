@@ -10,7 +10,7 @@ use Assegai\Cli\Core\Console\Console;
 use Assegai\Cli\Enumerations\Color\Color;
 use Assegai\Cli\Enumerations\ValueRequirementType;
 use Assegai\Cli\Enumerations\ValueType;
-use Assegai\Cli\Exceptions\ConsoleExceptions;
+use Assegai\Cli\Exceptions\ConsoleException;
 use Assegai\Cli\Interfaces\IArgumentHost;
 use Assegai\Cli\Interfaces\IExecutionContext;
 use Assegai\Cli\Util\Config;
@@ -41,7 +41,7 @@ class ServeCommand extends AbstractCommand
   /**
    * @param IArgumentHost|IExecutionContext $context
    * @return int
-   * @throws ConsoleExceptions
+   * @throws ConsoleException
    */
   public function execute(IArgumentHost|IExecutionContext $context): int
   {
@@ -83,7 +83,7 @@ class ServeCommand extends AbstractCommand
     $command = "php -S $host:${port}${router}";
     if (exec($command) === false)
     {
-      throw new ConsoleExceptions(message: 'Browser exception');
+      throw new ConsoleException(message: 'Browser exception');
     }
 
     Console::log(message: sprintf("Starting Server...\n%sListening on port %s\n", Color::YELLOW, $port));

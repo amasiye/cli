@@ -5,7 +5,7 @@ namespace Assegai\Cli\Commands;
 use Assegai\Cli\Attributes\Command;
 use Assegai\Cli\Core\AbstractCommand;
 use Assegai\Cli\Enumerations\Color\Color;
-use Assegai\Cli\Exceptions\ConsoleExceptions;
+use Assegai\Cli\Exceptions\ConsoleException;
 use Assegai\Cli\Interfaces\IArgumentHost;
 use Assegai\Cli\Util\Paths;
 
@@ -15,7 +15,7 @@ class InfoCommand extends AbstractCommand
   /**
    * @param IArgumentHost $context
    * @return int
-   * @throws ConsoleExceptions
+   * @throws ConsoleException
    */
   public function execute(IArgumentHost $context): int
   {

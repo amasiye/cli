@@ -5,7 +5,7 @@ namespace Assegai\Cli\Commands;
 use Assegai\Cli\Attributes\Command;
 use Assegai\Cli\Core\AbstractCommand;
 use Assegai\Cli\Core\App;
-use Assegai\Cli\Exceptions\ConsoleExceptions;
+use Assegai\Cli\Exceptions\ConsoleException;
 use Assegai\Cli\Interfaces\IArgumentHost;
 use Assegai\Cli\Util\Logger\Log;
 use Assegai\Cli\Util\Paths;
@@ -19,7 +19,7 @@ use Assegai\Cli\Util\Paths;
 class VersionCommand extends AbstractCommand
 {
   /**
-   * @throws ConsoleExceptions
+   * @throws ConsoleException
    */
   public function execute(IArgumentHost $context): int
   {
@@ -30,18 +30,18 @@ class VersionCommand extends AbstractCommand
 
   /**
    * @return string
-   * @throws ConsoleExceptions
+   * @throws ConsoleException
    */
   public static function getVersion(): string
   {
-    $basePath = Paths::getBaseDirectory();
+    $basePath = Paths::getCliBaseDirectory();
     $versionOutputFile = "$basePath/res/version.txt";
 
     exec("composer global show assegaiphp/assegai-cli | grep 'versions'");
 
     if (! file_exists($versionOutputFile))
     {
-      throw new ConsoleExceptions('Version output stream error');
+      throw new ConsoleException('Version output stream error');
     }
 
     $info = trim(file_get_contents($versionOutputFile));
