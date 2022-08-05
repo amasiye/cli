@@ -4,7 +4,7 @@ namespace Assegai\Cli\Exceptions;
 
 use Exception;
 
-class ConsoleExceptions extends Exception
+class ConsoleException extends Exception
 {
   public function __construct(string $message = "")
   {

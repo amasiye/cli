@@ -2,7 +2,7 @@
 
 namespace Assegai\Cli\Exceptions;
 
-class NotFoundException extends ConsoleExceptions
+class NotFoundException extends ConsoleException
 {
 
 }

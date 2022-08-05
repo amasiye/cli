@@ -2,7 +2,7 @@
 
 namespace Assegai\Cli\Exceptions;
 
-class InvalidOptionException extends ConsoleExceptions
+class InvalidOptionException extends ConsoleException
 {
 
 }
