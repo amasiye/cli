@@ -148,6 +148,8 @@ class Text
   /**
    * Replaces each subsequence of this CharacterSequence that matches the literal target sequence with the
    * specified literal replacement sequence.
+   * @param string|Text $target
+   * @param string|Text $replacement
    * @return Text
    */
   public function replace(string|Text $target, string|Text $replacement): self
@@ -339,6 +341,47 @@ class Text
   public static function camelCaseToPascalCase(string $input): string
   {
     return ucfirst($input);
+  }
+
+  /**
+   * @param string $input
+   * @return string
+   */
+  public static function kebabToSnakeCase(string $input): string
+  {
+    return str_replace('-', '_', $input);
+  }
+
+  /**
+   * @param string $input
+   * @return string
+   */
+  public static function kebabToCamelCase(string $input): string
+  {
+    $tokens = explode('-', $input);
+    $output = '';
+
+    foreach ($tokens as $index => $token)
+    {
+      $word = strtolower($token);
+      if ($index !== 0)
+      {
+        $word = ucfirst($word);
+      }
+
+      $output .= $word;
+    }
+
+    return $output;
+  }
+
+  /**
+   * @param string $input
+   * @return string
+   */
+  public static function kebabToPascal(string $input): string
+  {
+    return ucfirst(self::kebabToCamelCase($input));
   }
 
   /**
