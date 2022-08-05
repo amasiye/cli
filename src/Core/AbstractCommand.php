@@ -14,6 +14,7 @@ use Assegai\Cli\Interfaces\IComparable;
 use Assegai\Cli\Interfaces\IExecutable;
 use Assegai\Cli\Util\Logger\Log;
 use Assegai\Cli\Util\Paths;
+use Assegai\Cli\Util\Text;
 use ReflectionAttribute;
 use ReflectionClass;
 use stdClass;
@@ -74,11 +75,13 @@ abstract class AbstractCommand implements IExecutable, IComparable
   protected array $activatedOptions = [];
 
   protected stdClass $args;
+  protected stdClass $options;
 
   /**
    * @var Log
    */
   protected Log $logger;
+
   /**
    * @throws ConsoleExceptions
    */
@@ -117,6 +120,7 @@ abstract class AbstractCommand implements IExecutable, IComparable
       description: 'Outputs helpful information about this command.'
     );
 
+    $this->options = new stdClass();
     $this->args = new stdClass();
   }
 
@@ -203,7 +207,7 @@ abstract class AbstractCommand implements IExecutable, IComparable
 
     if ($this->availableArguments)
     {
-      $body .= PHP_EOL . Color::YELLOW . "Available arguments:" . Color::RESET . PHP_EOL;
+      $body .= PHP_EOL . Color::YELLOW . "Arguments:" . Color::RESET . PHP_EOL;
       /** @var CommandArgument $argument */
       foreach ($this->availableArguments as $argument)
       {
@@ -214,15 +218,18 @@ abstract class AbstractCommand implements IExecutable, IComparable
 
     if ($this->availableOptions)
     {
-      $body .= PHP_EOL . Color::YELLOW . "Available options:" . Color::RESET . PHP_EOL;
+      $body .= PHP_EOL . Color::YELLOW . "Options:" . Color::RESET . PHP_EOL;
       /** @var CommandOption $option */
       foreach ($this->availableOptions as $option)
       {
         $name = $option->alias ? "$option->name, $option->alias" : $option->name;
         $description = $option->description;
-        if (isset($option->defaultValue))
+        if (isset($option->defaultValue) && $option->type !== ValueRequirementType::NOT_ALLOWED)
         {
-          $description .= " Default: $option->defaultValue";
+          $description .= " Default: " . match(gettype($option->defaultValue)) {
+              'boolean' => json_encode($option->defaultValue),
+              default => $option->defaultValue
+            };
         }
         $body .= sprintf("  %-20s %s" . PHP_EOL, $name, $description);
       }
@@ -265,6 +272,8 @@ abstract class AbstractCommand implements IExecutable, IComparable
   public function parseArguments(array $args): void
   {
     $this->extractOptions($args);
+    $this->bindOptions();
+
     $this->extractArguments($args);
     $this->validateRequiredArguments();
     $this->bindArguments();
@@ -549,6 +558,15 @@ abstract class AbstractCommand implements IExecutable, IComparable
     }
   }
 
+  private function bindOptions(): void
+  {
+    foreach ($this->activatedOptions as $option)
+    {
+      $name = Text::kebabToCamelCase($option->name);
+      $this->options->$name = $option->getValue();
+    }
+  }
+
   /**
    * @return void
    */
@@ -556,7 +574,7 @@ abstract class AbstractCommand implements IExecutable, IComparable
   {
     foreach ($this->activatedArguments as $argument)
     {
-      $name = $argument->name;
+      $name = Text::kebabToCamelCase($argument->name);
       $this->args->$name = $argument->getValue();
     }
   }

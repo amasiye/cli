@@ -9,7 +9,7 @@ final class Config
 {
   public static function get(?string $path = null): mixed
   {
-    global $assegaiConfig;
+    $assegaiConfig = Paths::getWorkingDirectory() . '/assegai.json';
 
     if (!file_exists($assegaiConfig))
     {
