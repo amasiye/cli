@@ -4,8 +4,20 @@ namespace Assegai\Cli\Core\Menus;
 
 use Assegai\Cli\Enumerations\Color\Color;
 
+/**
+ *
+ */
 class MenuItem
 {
+  /**
+   * @param string $value
+   * @param string $description
+   * @param string|null $index
+   * @param string $indexColor
+   * @param string|null $alias
+   * @param string|null $fullDescription
+   * @param MenuOptions|null $options
+   */
   public function __construct(
     private readonly string  $value,
     private readonly string  $description = '',
@@ -21,20 +33,45 @@ class MenuItem
     }
   }
 
+  /**
+   * @return string
+   */
   public function value(): string { return $this->value; }
 
+  /**
+   * @return string
+   */
   public function description(): string { return $this->description; }
 
+  /**
+   * @return string|null
+   */
   public function index(): ?string { return $this->index; }
 
+  /**
+   * @param string $index
+   * @return void
+   */
   public function setIndex(string $index): void { $this->index = $index; }
 
+  /**
+   * @return string|null
+   */
   public function alias(): ?string { return $this->alias; }
 
+  /**
+   * @return string|null
+   */
   public function fullDescription(): ?string { return $this->fullDescription; }
 
+  /**
+   * @return MenuOptions|null
+   */
   public function options(): ?MenuOptions { return $this->options; }
 
+  /**
+   * @return string
+   */
   public function __toString(): string
   {
     $color = strtolower($this->indexColor);
@@ -61,6 +98,10 @@ class MenuItem
     return sprintf("%-2s%s%s", $output, $this->value, $alias);
   }
 
+  /**
+   * @param bool|null $withDescriptions
+   * @return string
+   */
   public function display(?bool $withDescriptions = null): string
   {
     if (!is_null($this->options()->showDescriptions()))
@@ -69,20 +110,30 @@ class MenuItem
     }
 
     return $withDescriptions
-      ? sprintf("\e[1;34m%-18s\e[0m%s", strval($this), $this->description())
-      : sprintf("\e[1;34m%s\e[0m", strval($this));
+      ? sprintf("\e[1;34m%-18s\e[0m%s", $this, $this->description())
+      : sprintf("\e[1;34m%s\e[0m", $this);
   }
 
-  public function print_display(?bool $withDescriptions = null): void
+  /**
+   * @param bool|null $withDescriptions
+   * @return void
+   */
+  public function printDisplay(?bool $withDescriptions = null): void
   {
     echo $this->display(withDescriptions: $withDescriptions);
   }
 
+  /**
+   * @return string
+   */
   public function getHelp(): string
   {
     return 'Not Implemented';
   }
 
+  /**
+   * @return void
+   */
   public function help(): void
   {
     echo $this->getHelp();

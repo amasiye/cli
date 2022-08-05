@@ -1,4 +1,4 @@
-<?php
+<?php /** @noinspection DuplicatedCode */
 
 namespace Assegai\Cli\Core\Menus;
 
@@ -60,7 +60,7 @@ class Menu
    * @param MenuOptions $options
    * @return void
    */
-  public function setOptions(MenuOptions $options): void { $this->otpions = $options; }
+  public function setOptions(MenuOptions $options): void { $this->options = $options; }
 
   /**
    * @return MenuItem|null
@@ -106,8 +106,6 @@ class Menu
   {
     if ($this->hasItemWithValue(valueOrAlias: $valueOrAlias))
     {
-      $value = null;
-
       foreach ($this->items as $item)
       {
         if ($item->value() === $valueOrAlias || $item->alias() === $valueOrAlias)
@@ -238,7 +236,8 @@ class Menu
       $item->options()->setShowIndexes($previousShowIndexes);
     }
 
-    return trim("${description}${titleColorCode}" . $this->title . "\e[0m\n$itemsOutput") . "\n";
+    return trim(sprintf("%s%s%s%s\n%s",
+        $description, $titleColorCode, $this->title, Color::RESET, $itemsOutput)) . "\n";
   }
 
   /**
@@ -275,7 +274,6 @@ class Menu
       $inputColorCode = $this->getColorCode(color: 'blue');
       printf("%s\n%s:$inputColorCode ", $this, $message);
       $attemptsLeft = 4;
-      $isValidChoice = false;
       $colorCode = $this->getColorCode(color: 'magenta');
 
       do
@@ -358,7 +356,7 @@ class Menu
         $colorReset   = Color::RESET;
 
         printf(
-          "${commandColor}%s${colorReset}\n  %s\n\n${titleColor}Full Description:${colorReset}\n%-2s%s\n",
+          "$commandColor%s$colorReset\n  %s\n\n${titleColor}Full Description:$colorReset\n%-2s%s\n",
           $item->value(),
           $item->description(),
           ' ',
