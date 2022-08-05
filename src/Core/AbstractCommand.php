@@ -6,7 +6,7 @@ use Assegai\Cli\Attributes\Command;
 use Assegai\Cli\Core\Console\Console;
 use Assegai\Cli\Enumerations\Color\Color;
 use Assegai\Cli\Enumerations\ValueRequirementType;
-use Assegai\Cli\Exceptions\ConsoleExceptions;
+use Assegai\Cli\Exceptions\ConsoleException;
 use Assegai\Cli\Exceptions\InvalidArgumentException;
 use Assegai\Cli\Exceptions\InvalidOptionException;
 use Assegai\Cli\Interfaces\IArgumentHost;
@@ -83,7 +83,7 @@ abstract class AbstractCommand implements IExecutable, IComparable
   protected Log $logger;
 
   /**
-   * @throws ConsoleExceptions
+   * @throws ConsoleException
    */
   public final function __construct()
   {
@@ -97,7 +97,7 @@ abstract class AbstractCommand implements IExecutable, IComparable
 
     if (empty($commandAttributes))
     {
-      throw new ConsoleExceptions('Command attribute not set for ' . $reflection->getName());
+      throw new ConsoleException('Command attribute not set for ' . $reflection->getName());
     }
 
     /** @var Command $commandAttributeInstance */
@@ -256,11 +256,11 @@ abstract class AbstractCommand implements IExecutable, IComparable
   /**
    * @param IArgumentHost $context
    * @return int
-   * @throws ConsoleExceptions
+   * @throws ConsoleException
    */
   public function undo(IArgumentHost $context): int
   {
-    throw new ConsoleExceptions(sprintf("%s cannot be undone!", $this->name));
+    throw new ConsoleException(sprintf("%s cannot be undone!", $this->name));
   }
 
   /**

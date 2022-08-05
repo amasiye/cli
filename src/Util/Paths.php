@@ -30,7 +30,7 @@ final class Paths
   /**
    * @return string
    */
-  public static function getBaseDirectory(): string
+  public static function getCliBaseDirectory(): string
   {
     return dirname(__DIR__, 2);
   }
@@ -40,7 +40,7 @@ final class Paths
    */
   public static function getResourceDirectory(): string
   {
-    return self::getBaseDirectory() . '/res';
+    return self::getCliBaseDirectory() . '/res';
   }
 
   /**
@@ -54,5 +54,21 @@ final class Paths
   public static function getConfigDirectory(): string
   {
     return self::getWorkingDirectory() . '/config';
+  }
+
+  public static function join(...$paths): string
+  {
+    $path = '';
+
+    foreach ($paths as $p)
+    {
+      if (is_string($p))
+      {
+        $path .= "/$p";
+      }
+    }
+
+    $path = preg_replace('/\/+/', '/', $path);
+    return rtrim($path, '/');
   }
 }
