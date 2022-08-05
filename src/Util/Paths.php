@@ -46,8 +46,13 @@ final class Paths
   /**
    * @return string
    */
-  public static function getAssegaiConfigPath(): string
+  public static function getAssegaiJsonConfigPath(): string
   {
     return self::getWorkingDirectory() . '/assegai.json';
+  }
+
+  public static function getConfigDirectory(): string
+  {
+    return self::getWorkingDirectory() . '/config';
   }
 }
