@@ -3,12 +3,17 @@
 namespace Assegai\Cli\Core\Console;
 
 use Assegai\Cli\Enumerations\Color\Color;
+use Assegai\Cli\Util\Number;
 
 /**
  *
  */
 final class Console
 {
+  const FILE_CREATE = 'CREATE';
+  const FILE_UPDATE = 'UPDATE';
+  const FILE_DELETE = 'DELETE';
+
   /**
    * @return void
    */
@@ -232,5 +237,35 @@ final class Console
       'double' => strval($obj),
       default => $obj
     };
+  }
+
+  public static function logCreate(string $path, ?int $filesize = null): void
+  {
+    self::logFileAction(path: $path, filesize: $filesize);
+  }
+
+  public static function logUpdate(string $path, ?int $filesize = null): void
+  {
+    self::logFileAction(action: self::FILE_UPDATE, path: $path, filesize: $filesize);
+  }
+
+  public static function logDelete(string $path, ?int $filesize = null): void
+  {
+    self::logFileAction(action: self::FILE_DELETE, path: $path, filesize: $filesize);
+  }
+
+  private static function logFileAction(string $action = self::FILE_CREATE, string $path = '', ?int $filesize = null): void
+  {
+    $colorCode = match($action) {
+      self::FILE_CREATE => Color::GREEN,
+      self::FILE_DELETE => Color::RED,
+      self::FILE_UPDATE => Color::LIGHT_BLUE,
+      default             => Color::YELLOW
+    };
+
+    $bytes = Number::formatBytes(bytes: $filesize);
+    $suffix = is_null($filesize) ? '' : " ($bytes)";
+
+    printf("%s%s%s %s%s\n", $colorCode, $action, Color::RESET, $path, $suffix);
   }
 }
