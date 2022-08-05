@@ -11,6 +11,7 @@ use Assegai\Cli\Util\Number;
 final class Console
 {
   const FILE_CREATE = 'CREATE';
+  const FILE_RENAME = 'RENAME';
   const FILE_UPDATE = 'UPDATE';
   const FILE_DELETE = 'DELETE';
 
@@ -249,9 +250,14 @@ final class Console
     self::logFileAction(action: self::FILE_UPDATE, path: $path, filesize: $filesize);
   }
 
-  public static function logDelete(string $path, ?int $filesize = null): void
+  public static function logRename(string $path, string $to): void
   {
-    self::logFileAction(action: self::FILE_DELETE, path: $path, filesize: $filesize);
+    self::logFileAction(action: self::FILE_RENAME, path: sprintf("%s → %s", $path, $to));
+  }
+
+  public static function logDelete(string $path): void
+  {
+    self::logFileAction(action: self::FILE_DELETE, path: $path);
   }
 
   private static function logFileAction(string $action = self::FILE_CREATE, string $path = '', ?int $filesize = null): void
@@ -259,6 +265,7 @@ final class Console
     $colorCode = match($action) {
       self::FILE_CREATE => Color::GREEN,
       self::FILE_DELETE => Color::RED,
+      self::FILE_RENAME,
       self::FILE_UPDATE => Color::LIGHT_BLUE,
       default             => Color::YELLOW
     };
