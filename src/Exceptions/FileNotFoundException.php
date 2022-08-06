@@ -2,7 +2,7 @@
 
 namespace Assegai\Cli\Exceptions;
 
-class FileNotFoundException extends NotFoundException
+class FileNotFoundException extends ConsoleException
 {
   /**
    * @param string $filename
