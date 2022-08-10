@@ -5,7 +5,7 @@ use Assegai\Cli\Util\Text;
 
 function classifySchemaName($name): string
 {
-  $output = Text::kebabToPascal($name);
+  $output = Text::pascalize($name);
   return sprintf("%sSchematic", $output);
 }
 
@@ -14,9 +14,7 @@ $schema = [];
 
 foreach ($schematicTypes as $type)
 {
-  $schema[$type->value] = 'Assegai\Cli\Schematics\Module\\' . classifySchemaName($type->value);
+  $schema[$type->value] = 'Assegai\Cli\Schematics\\' . Text::pascalize($type->value) . '\\' . classifySchemaName($type->value);
 }
 
-return [
-  'schema' => $schema
-];
+return ['schema' => $schema];
