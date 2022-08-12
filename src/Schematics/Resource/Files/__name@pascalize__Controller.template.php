@@ -1,7 +1,4 @@
-<?php /** @noinspection PhpPromotedFieldUsageInspection */
-/** @noinspection PhpUndefinedConstantInspection */
-
-/** @noinspection DuplicatedCode */
+<?php
 
 namespace Assegai\App\%== __name@pascalize__ ==%;
 

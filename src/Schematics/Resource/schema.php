@@ -35,6 +35,10 @@ return [
     'singular' => [
       'description' => 'The singular version of the name.',
       'type' => 'string',
+    ],
+    'updateModule' => [
+      'path' => '/AppModule.php',
+      'imports' => ['__name@pascalize__Module::class'],
     ]
   ]
 ];
