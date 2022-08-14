@@ -8,6 +8,7 @@ use Assegai\Cli\Commands\GenerateCommand;
 use Assegai\Cli\Commands\HelpCommand;
 use Assegai\Cli\Commands\InfoCommand;
 use Assegai\Cli\Commands\ListCommand;
+use Assegai\Cli\Commands\NewCommand;
 use Assegai\Cli\Commands\ServeCommand;
 use Assegai\Cli\Commands\UpdateCommand;
 use Assegai\Cli\Commands\VersionCommand;
@@ -20,6 +21,7 @@ function bootstrap(): void
 
   $app
     ->addAll([
+      new NewCommand(),
       new AddCommand(),
       new GenerateCommand(),
       new HelpCommand(),
