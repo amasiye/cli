@@ -34,6 +34,6 @@ Learn more in the [official documentation](https://docs.assegai.ml/cli/overview)
 
 ## License
 
-Assegai CLI is [MIT Licensed](LICENSE.md)
+Assegai CLI is [MIT Licensed](LICENSE)
 
 [schematics]: https://github.com/angular/angular-cli/tree/master/packages/angular_devkit/schematics

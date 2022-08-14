@@ -27,7 +27,10 @@ class UpdateCommand extends AbstractCommand
       Color::RESET
     ));
 
-    shell_exec("composer update");
+    if (false === shell_exec("composer update"))
+    {
+      Console::error(obj: "Update error", exit: true);
+    }
 
     Console::print(message: "\n✔️ Update complete! \n");
 

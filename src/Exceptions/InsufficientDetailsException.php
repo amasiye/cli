@@ -2,7 +2,7 @@
 
 namespace Assegai\Cli\Exceptions;
 
-class InsufficientDetailsException extends ConsoleExceptions
+class InsufficientDetailsException extends ConsoleException
 {
 
 }

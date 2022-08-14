@@ -2,7 +2,7 @@
 
 namespace Assegai\Cli\Exceptions;
 
-class InvalidArgumentException extends ConsoleExceptions
+class InvalidArgumentException extends ConsoleException
 {
 
 }

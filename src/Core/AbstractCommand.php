@@ -3,17 +3,21 @@
 namespace Assegai\Cli\Core;
 
 use Assegai\Cli\Attributes\Command;
+use Assegai\Cli\Core\Console\Console;
 use Assegai\Cli\Enumerations\Color\Color;
 use Assegai\Cli\Enumerations\ValueRequirementType;
-use Assegai\Cli\Exceptions\ConsoleExceptions;
+use Assegai\Cli\Exceptions\ConsoleException;
+use Assegai\Cli\Exceptions\InvalidArgumentException;
 use Assegai\Cli\Exceptions\InvalidOptionException;
 use Assegai\Cli\Interfaces\IArgumentHost;
 use Assegai\Cli\Interfaces\IComparable;
 use Assegai\Cli\Interfaces\IExecutable;
 use Assegai\Cli\Util\Logger\Log;
 use Assegai\Cli\Util\Paths;
+use Assegai\Cli\Util\Text;
 use ReflectionAttribute;
 use ReflectionClass;
+use stdClass;
 
 /**
  * The base Command class.
@@ -61,24 +65,25 @@ abstract class AbstractCommand implements IExecutable, IComparable
   /** @var CommandArgument[] $availableArguments  */
   protected array $availableArguments = [];
 
+  /** @var CommandArgument[] $activatedArguments  */
+  protected array $activatedArguments = [];
+
   /** @var CommandOption[] $availableOptions */
   protected array $availableOptions = [];
 
-  /** @var array $options */
-  protected array $options = [];
+  /** @var CommandOption[] $activatedOptions */
+  protected array $activatedOptions = [];
 
-  /** @var string[] $parsedArguments  */
-  protected array $parsedArguments = [];
-
-  /** @var string[] $arguments */
-  protected array $arguments = [];
+  protected stdClass $args;
+  protected stdClass $options;
 
   /**
    * @var Log
    */
   protected Log $logger;
+
   /**
-   * @throws ConsoleExceptions
+   * @throws ConsoleException
    */
   public final function __construct()
   {
@@ -92,7 +97,7 @@ abstract class AbstractCommand implements IExecutable, IComparable
 
     if (empty($commandAttributes))
     {
-      throw new ConsoleExceptions('Command attribute not set for ' . $reflection->getName());
+      throw new ConsoleException('Command attribute not set for ' . $reflection->getName());
     }
 
     /** @var Command $commandAttributeInstance */
@@ -114,6 +119,9 @@ abstract class AbstractCommand implements IExecutable, IComparable
       type: ValueRequirementType::NOT_ALLOWED,
       description: 'Outputs helpful information about this command.'
     );
+
+    $this->options = new stdClass();
+    $this->args = new stdClass();
   }
 
   /**
@@ -157,7 +165,7 @@ abstract class AbstractCommand implements IExecutable, IComparable
    */
   public function configure(): void
   {
-    // TODO: Implement configure() method.
+    // Optional configuration step
   }
 
   /**
@@ -199,7 +207,7 @@ abstract class AbstractCommand implements IExecutable, IComparable
 
     if ($this->availableArguments)
     {
-      $body .= PHP_EOL . Color::YELLOW . "Available arguments:" . Color::RESET . PHP_EOL;
+      $body .= PHP_EOL . Color::YELLOW . "Arguments:" . Color::RESET . PHP_EOL;
       /** @var CommandArgument $argument */
       foreach ($this->availableArguments as $argument)
       {
@@ -210,15 +218,18 @@ abstract class AbstractCommand implements IExecutable, IComparable
 
     if ($this->availableOptions)
     {
-      $body .= PHP_EOL . Color::YELLOW . "Available options:" . Color::RESET . PHP_EOL;
+      $body .= PHP_EOL . Color::YELLOW . "Options:" . Color::RESET . PHP_EOL;
       /** @var CommandOption $option */
       foreach ($this->availableOptions as $option)
       {
         $name = $option->alias ? "$option->name, $option->alias" : $option->name;
         $description = $option->description;
-        if (isset($option->defaultValue))
+        if (isset($option->defaultValue) && $option->type !== ValueRequirementType::NOT_ALLOWED)
         {
-          $description .= " Default: $option->defaultValue";
+          $description .= " Default: " . match(gettype($option->defaultValue)) {
+              'boolean' => json_encode($option->defaultValue),
+              default => $option->defaultValue
+            };
         }
         $body .= sprintf("  %-20s %s" . PHP_EOL, $name, $description);
       }
@@ -245,11 +256,46 @@ abstract class AbstractCommand implements IExecutable, IComparable
   /**
    * @param IArgumentHost $context
    * @return int
-   * @throws ConsoleExceptions
+   * @throws ConsoleException
    */
   public function undo(IArgumentHost $context): int
   {
-    throw new ConsoleExceptions(sprintf("%s cannot be undone!", $this->name));
+    throw new ConsoleException(sprintf("%s cannot be undone!", $this->name));
+  }
+
+  /**
+   * @param array $args
+   * @return void
+   * @throws InvalidArgumentException
+   * @throws InvalidOptionException
+   */
+  public function parseArguments(array $args): void
+  {
+    $this->extractOptions($args);
+    $this->bindOptions();
+
+    $this->extractArguments($args);
+    $this->validateRequiredArguments();
+    $this->bindArguments();
+  }
+
+  /**
+   * @param array $args
+   * @return void
+   * @throws InvalidArgumentException
+   */
+  private function extractArguments(array $args): void
+  {
+    $args = array_slice($args, $this->lastArgumentIndex);
+
+    foreach ($this->availableArguments as $index => $argument)
+    {
+      if (isset($args[$index]))
+      {
+        $argument->setValue($args[$index]);
+        $this->activatedArguments[$argument->name] = $argument;
+      }
+    }
   }
 
   /**
@@ -257,7 +303,7 @@ abstract class AbstractCommand implements IExecutable, IComparable
    * @return void
    * @throws InvalidOptionException
    */
-  public function parseArguments(array $args): void
+  private function extractOptions(array $args): void
   {
     $shortOptions = $this->getShortOptionsList();
     $longOptions = $this->getLongOptionsList();
@@ -266,69 +312,51 @@ abstract class AbstractCommand implements IExecutable, IComparable
     for ($x = 0; $x < $totalArgs; $x++)
     {
       $token = $args[$x];
-      if ($this->isShortOption($token))
+      if ($this->isNotShortOption($token) && $this->isNotLongOption($token))
       {
-        $token = str_replace('-', '', $token);
-        $option = $this->getOption($token);
-        $option->setValue(false);
-
-        if ($option->acceptsValue())
-        {
-          $nextIndex = $x + 1;
-          $nextToken = $nextIndex < $totalArgs ? $args[$nextIndex] : null;
-
-          if (! $nextToken && $option->type === ValueRequirementType::REQUIRED)
-          {
-            throw new InvalidOptionException(message: "$token requires a value.");
-          }
-
-          if ($this->isShortOption($nextToken))
-          {
-            throw new InvalidOptionException(message: "$token requires a value.");
-          }
-
-          if ($this->isLongOption($nextToken))
-          {
-            throw new InvalidOptionException(message: "$token requires a value.");
-          }
-
-          $option->setValue($nextToken);
-        }
+        break;
       }
+
+      if (!in_array($token, $shortOptions) && !in_array($token, $longOptions))
+      {
+        break;
+      }
+
+      $properName = $token;
+      $token = in_array($token, $shortOptions)
+        ? str_replace('-', '', $token)
+        : str_replace('--', '', $token);
+
+      $option = $this->getOption($token);
+      $option->setValue(false);
+
+      if ($option->acceptsValue())
+      {
+        $nextIndex = $x + 1;
+        $nextToken = $nextIndex < $totalArgs ? $args[$nextIndex] : null;
+
+        if (! $nextToken && $option->type === ValueRequirementType::REQUIRED)
+        {
+          throw new InvalidOptionException(message: "$properName requires a value.");
+        }
+
+        if ($this->isShortOption($nextToken))
+        {
+          throw new InvalidOptionException(message: "$properName requires a value.");
+        }
+
+        if ($this->isLongOption($nextToken))
+        {
+          throw new InvalidOptionException(message: "$properName requires a value.");
+        }
+
+        $option->setValue($nextToken);
+        $x = $nextIndex;
+      }
+
+      $this->activatedOptions[$option->name] = $option;
+      $this->lastArgumentIndex = $x + 1;
     }
-  }
-
-  /**
-   * @param array $args
-   * @return void
-   */
-  private function extractArguments(array $args): void
-  {
-  }
-
-  /**
-   * @param array $args
-   * @return void
-   */
-  private function extractOptions(array $args): void
-  {
-    // TODO: Implement extractOptions()
-  }
-
-  /**
-   * @return void
-   */
-  private function resolveOptions(): void
-  {
-    // TODO: Implement resolveOptions()
-  }
-
-  /**
-   * @return void
-   */
-  private function bindArguments(): void
-  {
-    // TODO: Implement bindArguments()
   }
 
   /**
@@ -355,37 +383,16 @@ abstract class AbstractCommand implements IExecutable, IComparable
    * @param array $args
    * @return string|null
    */
-  protected function getNextOptions(array $args): ?string
-  {
-    $totalArgs = count($args);
-    for ($x = $this->lastArgumentIndex; $x < $totalArgs; $x++)
-    {
-      $value = $args[$x];
-      if (str_starts_with($value, '-'))
-      {
-        $this->lastArgumentIndex = $x;
-        return $value;
-      }
-    }
-
-    return null;
-  }
 
   /**
-   * @param string $name
-   * @param string|null $alias
-   * @param ValueRequirementType $type
+   * @param CommandOption $option
    * @return $this
    */
-  public function addOption(
-    string $name,
-    ?string $alias = null,
-    ValueRequirementType $type = ValueRequirementType::NOT_ALLOWED
-  ): self
+  public function addOption(CommandOption $option): self
   {
-    if (! $this->hasOption(name: $name, alias: $alias))
+    if (! $this->hasOption(name: $option->name, alias: $option->alias))
     {
-      $this->availableOptions[$name] = new CommandOption(name: $name, alias: $alias, type: $type);
+      $this->availableOptions[$option->name] = new CommandOption(name: $option->name, alias: $option->alias, type: $option->type);
     }
 
     return $this;
@@ -475,6 +482,7 @@ abstract class AbstractCommand implements IExecutable, IComparable
 
   private function getShortOptionsList(): array
   {
+    // NOTE: Could possibly use associative array
     $options = [];
 
     foreach ($this->availableOptions as $option)
@@ -490,9 +498,9 @@ abstract class AbstractCommand implements IExecutable, IComparable
 
   private function getLongOptionsList(): array
   {
-    return array_map(function ($argument) {
-      return '--' . $argument->name;
-    }, $this->availableArguments);
+    return array_map(function ($option) {
+      return '--' . $option->name;
+    }, $this->availableOptions);
   }
 
   private function isShortOption(string $token): bool
@@ -500,8 +508,74 @@ abstract class AbstractCommand implements IExecutable, IComparable
     return (bool)preg_match('/^-\w+/', $token);
   }
 
+  private function isNotShortOption(string $name): bool
+  {
+    return !$this->isShortOption($name);
+  }
+
   private function isLongOption(string $token): bool
   {
     return (bool)preg_match('/^--\w+/', $token);
+  }
+
+  private function isNotLongOption(string $name): bool
+  {
+    return !$this->isLongOption($name);
+  }
+
+  private function validateRequiredArguments(): void
+  {
+    # Collect required arguments
+    $requiredArgumentsNameList = [];
+    foreach ($this->availableArguments as $argument)
+    {
+      if ($argument->isRequired)
+      {
+        $requiredArgumentsNameList[] = $argument->name;
+      }
+    }
+
+    $totalRequiredArguments = count($requiredArgumentsNameList);
+
+    if (empty($this->activatedArguments) && $totalRequiredArguments > 0)
+    {
+      $missingArgumentName = $this->availableArguments[0]?->name;
+      Console::error(obj: sprintf("missing required argument '%s'", $missingArgumentName), exit: true);
+    }
+
+    # Check if any required arguments are missing
+    foreach ($this->activatedArguments as $argument)
+    {
+      if (! $argument->isRequired )
+      {
+        continue;
+      }
+
+      if (! in_array($argument->name, $requiredArgumentsNameList) )
+      {
+        Console::error(obj: sprintf("missing required argument '%s'", $argument->name), exit: true);
+      }
+    }
+  }
+
+  private function bindOptions(): void
+  {
+    foreach ($this->activatedOptions as $option)
+    {
+      $name = Text::kebabToCamelCase($option->name);
+      $this->options->$name = $option->getValue();
+    }
+  }
+
+  /**
+   * @return void
+   */
+  private function bindArguments(): void
+  {
+    foreach ($this->activatedArguments as $argument)
+    {
+      $name = Text::kebabToCamelCase($argument->name);
+      $this->args->$name = $argument->getValue();
+    }
   }
 }

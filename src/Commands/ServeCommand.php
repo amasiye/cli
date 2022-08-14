@@ -7,11 +7,14 @@ use Assegai\Cli\Core\AbstractCommand;
 use Assegai\Cli\Core\CommandArgument;
 use Assegai\Cli\Core\CommandOption;
 use Assegai\Cli\Core\Console\Console;
+use Assegai\Cli\Enumerations\Color\Color;
 use Assegai\Cli\Enumerations\ValueRequirementType;
 use Assegai\Cli\Enumerations\ValueType;
-use Assegai\Cli\Exceptions\ConsoleExceptions;
+use Assegai\Cli\Exceptions\ConsoleException;
 use Assegai\Cli\Interfaces\IArgumentHost;
 use Assegai\Cli\Interfaces\IExecutionContext;
+use Assegai\Cli\Util\Config;
+use Assegai\Cli\Util\Paths;
 
 /**
  * Command to start a local development server.
@@ -38,31 +41,70 @@ class ServeCommand extends AbstractCommand
   /**
    * @param IArgumentHost|IExecutionContext $context
    * @return int
-   * @throws ConsoleExceptions
+   * @throws ConsoleException
    */
   public function execute(IArgumentHost|IExecutionContext $context): int
   {
     // TODO: Implement execute() method.
-    $port = 5000;
+    $config = Config::get();
+    $host = 'localhost';
+    $port = '3000';
+    $routerPath = "assegai-router.php";
 
-    $browser = match (true) {
-      (bool)exec('which sensible-browser') => 'sensible-browser', # LINUX
-      (bool)exec('which $BROWSER') => '$BROWSER', # LINUX
-      (bool)exec('which xdg-open') => 'xdg-open', # LINUX
-      (bool)exec('which gnome-open') => 'gnome-open', # LINUX
-      (bool)exec('which explorer.exe') => 'explorer.exe', # WINDOWS
-      (bool)exec('which open') => 'open', # MACOS
-      default => ''
-    };
-
-    if (! $browser )
+    if (empty($config))
     {
-      Console::warn('Could not detect which web browser to use.');
+      exit;
     }
 
-    if (exec("$browser http://localhost:$port") === false)
+    if (
+      isset($config->development) &&
+      isset($config->development->server)
+    )
     {
-      throw new ConsoleExceptions(message: 'Browser exception');
+      $server = $config->development->server;
+      if (isset($server->host))
+      {
+        $host = $server->host;
+      }
+
+      if (isset($server->port))
+      {
+        $port = $server->port;
+      }
+
+      if (isset($server->router))
+      {
+        $routerPath = $server->router;
+      }
+    }
+
+    $router = file_exists(Paths::getWorkingDirectory() . "/$routerPath") ? " $routerPath" : "";
+
+    $command = "php -S $host:${port}${router}";
+    if (exec($command) === false)
+    {
+      throw new ConsoleException(message: 'Browser exception');
+    }
+
+    Console::log(message: sprintf("Starting Server...\n%sListening on port %s\n", Color::YELLOW, $port));
+
+    $openBrowser = $this->options->open ?? $config?->development?->openBrowser ?? false;
+    if ($openBrowser)
+    {
+      $browser = match (true) {
+        (bool)exec('which sensible-browser') => 'sensible-browser', # LINUX
+        (bool)exec('which $BROWSER') => '$BROWSER', # LINUX
+        (bool)exec('which xdg-open') => 'xdg-open', # LINUX
+        (bool)exec('which gnome-open') => 'gnome-open', # LINUX
+        (bool)exec('which explorer.exe') => 'explorer.exe', # WINDOWS
+        (bool)exec('which open') => 'open', # MACOS
+        default => ''
+      };
+
+      if (! $browser )
+      {
+        Console::warn('Could not detect which web browser to use.');
+      }
     }
 
     return Command::SUCCESS;
