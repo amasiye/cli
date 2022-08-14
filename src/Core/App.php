@@ -7,6 +7,8 @@ use Assegai\Cli\Exceptions\ConsoleException;
 use Assegai\Cli\Exceptions\InsufficientDetailsException;
 use Assegai\Cli\Exceptions\NotFoundException;
 use Assegai\Cli\Interfaces\IExecutable;
+use ReflectionClass;
+use ReflectionException;
 
 /**
  *
@@ -91,9 +93,16 @@ final class App
         }
       }
       $command->parseArguments($this->context->getArgs());
+      $commandReflection = new ReflectionClass($command::class);
+      $executeMethod = $commandReflection->getMethod('execute');
+      $attributes = $executeMethod->getAttributes();
+      foreach ($attributes as $attribute)
+      {
+        $attribute->newInstance();
+      }
       $command->execute($this->context);
     }
-    catch (ConsoleException $e)
+    catch (ConsoleException|ReflectionException $e)
     {
       Console::error($e->getMessage());
     }
