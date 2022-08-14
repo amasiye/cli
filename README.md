@@ -28,7 +28,7 @@ Learn more in the [official documentation](https://docs.assegai.ml/cli/overview)
 
 ## Stay in touch
 
-* Author - [Andrew Masiye](https://twitter.com/feenix11)
+* Author - [Andrew Masiye](https://twitter.com/feenix11), [Daniel Kaluba](https://twitter.com/ZombieKlassic)
 * Website - [https://atatusoft.com](https://atatusoft.com/)
 * Twitter - [@assegaiphp](https://twitter.com/assegaiphp)
 
