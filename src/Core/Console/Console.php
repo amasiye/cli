@@ -4,23 +4,39 @@ namespace Assegai\Cli\Core\Console;
 
 use Assegai\Cli\Enumerations\Color\Color;
 use Assegai\Cli\Util\Number;
+use \Throwable;
 
 /**
  *
  */
 final class Console
 {
+  /**
+   *
+   */
   const FILE_CREATE = 'CREATE';
+  /**
+   *
+   */
   const FILE_RENAME = 'RENAME';
+  /**
+   *
+   */
   const FILE_UPDATE = 'UPDATE';
+  /**
+   *
+   */
   const FILE_DELETE = 'DELETE';
 
   /**
-   * @return void
+   * @param mixed $assertion
+   * @param string|Throwable|null $description
+   * @return bool
    */
-  public static function assert(): void
+  public static function assert(mixed $assertion, null|string|Throwable $description = null): bool
   {
     // TODO: Implement assert()
+    return assert(assertion: $assertion, description: $description);
   }
 
   /**
@@ -240,26 +256,51 @@ final class Console
     };
   }
 
+  /**
+   * @param string $path
+   * @param int|null $filesize
+   * @return void
+   */
   public static function logCreate(string $path, ?int $filesize = null): void
   {
     self::logFileAction(path: $path, filesize: $filesize);
   }
 
+  /**
+   * @param string $path
+   * @param int|null $filesize
+   * @return void
+   */
   public static function logUpdate(string $path, ?int $filesize = null): void
   {
     self::logFileAction(action: self::FILE_UPDATE, path: $path, filesize: $filesize);
   }
 
+  /**
+   * @param string $path
+   * @param string $to
+   * @return void
+   */
   public static function logRename(string $path, string $to): void
   {
     self::logFileAction(action: self::FILE_RENAME, path: sprintf("%s → %s", $path, $to));
   }
 
+  /**
+   * @param string $path
+   * @return void
+   */
   public static function logDelete(string $path): void
   {
     self::logFileAction(action: self::FILE_DELETE, path: $path);
   }
 
+  /**
+   * @param string $action
+   * @param string $path
+   * @param int|null $filesize
+   * @return void
+   */
   private static function logFileAction(string $action = self::FILE_CREATE, string $path = '', ?int $filesize = null): void
   {
     $colorCode = match($action) {
@@ -274,5 +315,14 @@ final class Console
     $suffix = is_null($filesize) ? '' : " ($bytes)";
 
     printf("%s%s%s %s%s\n", $colorCode, $action, Color::RESET, $path, $suffix);
+  }
+
+  /**
+   * @param ...$args
+   * @return never
+   */
+  public static function debug(...$args): never
+  {
+    exit(var_export($args, true) . PHP_EOL);
   }
 }

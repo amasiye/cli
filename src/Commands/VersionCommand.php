@@ -25,6 +25,7 @@ class VersionCommand extends AbstractCommand
   {
     $version = self::getVersion() . PHP_EOL;
     $this->logger->log(__CLASS__, $version);
+    echo $version;
     return Command::SUCCESS;
   }
 
@@ -37,7 +38,7 @@ class VersionCommand extends AbstractCommand
     $basePath = Paths::getCliBaseDirectory();
     $versionOutputFile = "$basePath/res/version.txt";
 
-    exec("composer global show assegaiphp/assegai-cli | grep 'versions'");
+    passthru("composer global show assegaiphp/assegai-cli | grep 'versions' 1> $versionOutputFile");
 
     if (! file_exists($versionOutputFile))
     {

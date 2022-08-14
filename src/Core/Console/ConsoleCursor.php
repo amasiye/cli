@@ -2,6 +2,9 @@
 
 namespace Assegai\Cli\Core\Console;
 
+/**
+ *
+ */
 final class ConsoleCursor
 {
   /**
@@ -67,6 +70,7 @@ final class ConsoleCursor
 
   /**
    *
+   * @param int $numberOfLines
    * @param bool $return
    * If used and set to true, moveUpBy will return a string containing ANSI code instead of outputing it.
    *
@@ -85,6 +89,7 @@ final class ConsoleCursor
   }
 
   /**
+   * @param int $numberOfColumns
    * @param bool $return
    * If used and set to true, moveUpBy will return a string containing ANSI code instead of outputing it.
    *
@@ -103,6 +108,7 @@ final class ConsoleCursor
   }
 
   /**
+   * @param int $numberOfColumns
    * @param bool $return
    * If used and set to true, moveUpBy will return a string containing ANSI code instead of outputing it.
    *
@@ -121,8 +127,9 @@ final class ConsoleCursor
   }
 
   /**
+   * @param int $numberOfLines
    * @param bool $return
-   * If used and set to true, moveUpBy will return a string containing ANSI code instead of outputing it.
+   * If used and set to true, moveStartNextBy will return a string containing ANSI code instead of outputting it.
    *
    * @return null|string Returns a string containing ANSI code or null if `$return` is set to false.
    */
@@ -268,6 +275,10 @@ final class ConsoleCursor
     return null;
   }
 
+  /**
+   * @param bool $isVisible
+   * @return void
+   */
   public static function setVisibility(bool $isVisible): void
   {
     if ($isVisible)

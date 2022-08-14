@@ -25,7 +25,7 @@ _assegai_completion()
 
     g|generate)
     case "$prev" in    
-      application|class|controller|entity|guard|interceptor|module|resource|service|test)
+      application|attribute|config|controller|class|guard|interceptor|interface|middleware|module|pipe|resource|service|test)
       return
       ;;
 
