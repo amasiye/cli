@@ -1,8 +1,8 @@
 <?php
 
-namespace Assegai\App\__name@pascalize__;
+namespace Assegai\App\%== __name@pascalize__ ==%;
 
-use Assegai\Core\Attributes\Controller;
+use Assegai\Core\Attributes\Injectable;
 
-#[Controller('__name@snakeize__')]
-class __name@pascalize__Controller {}
+#[Injectable]
+class %== __name@pascalize__ ==%Service {}

@@ -38,6 +38,7 @@ return [
     ],
     'updateModule' => [
       'path' => '/AppModule.php',
+      'use' => ['Assegai\App\__name@pascalize__\__name@pascalize__Module'],
       'imports' => ['__name@pascalize__Module::class'],
     ]
   ]

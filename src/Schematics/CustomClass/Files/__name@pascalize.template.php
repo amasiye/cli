@@ -2,4 +2,4 @@
 
 namespace Assegai\App;
 
-class __name@pascalize__ {}
+class %== __name@pascalize__ ==% {}
