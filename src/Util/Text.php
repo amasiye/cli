@@ -388,10 +388,27 @@ class Text
    * @param string $word
    * @return string
    */
+  public static function pascalize(string $word): string
+  {
+    $tokens = preg_split('/[-_]/', $word);
+    $output = [];
+    foreach ($tokens as $token)
+    {
+      $output[] = ucfirst($token);
+    }
+
+    return implode('', $output);
+  }
+
+  /**
+   * @param string $word
+   * @return string
+   */
   public static function getPluralForm(string $word): string
   {
     $inflector = new Inflector();
-    return $inflector->plural($word);
+    /* Suppress warning about alphanumeric delimiter in preg_match */
+    return @$inflector->plural($word);
   }
 
   /**
@@ -401,6 +418,6 @@ class Text
   public static function getSingularForm(string $word): string
   {
     $inflector = new Inflector();
-    return $inflector->singular($word);
+    return @$inflector->singular($word);
   }
 }

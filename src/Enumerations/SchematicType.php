@@ -10,10 +10,10 @@ use Assegai\Cli\Interfaces\IValuable;
 enum SchematicType: string implements IValuable
 {
   case APPLICATION = 'application';
+  case ATTRIBUTE = 'attribute';
   case CUSTOM_CLASS = 'class';
   case CONFIG = 'config';
   case CONTROLLER = 'controller';
-  case ATTRIBUTE = 'attribute';
   case FILTER = 'filter';
   case GUARD = 'guard';
   case INTERCEPTOR = 'interceptor';
@@ -21,10 +21,7 @@ enum SchematicType: string implements IValuable
   case MIDDLEWARE = 'middleware';
   case MODULE = 'module';
   case PIPE = 'pipe';
-  case PROVIDER = 'provider';
-  case RESOLVER = 'resolver';
   case SERVICE = 'service';
-  case LIBRARY = 'library';
   case RESOURCE = 'resource';
 
   /**

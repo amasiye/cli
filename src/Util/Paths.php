@@ -7,6 +7,9 @@ namespace Assegai\Cli\Util;
  */
 final class Paths
 {
+  /**
+   * Constructs a Paths object.
+   */
   private function __construct()
   {
   }
@@ -51,11 +54,26 @@ final class Paths
     return self::getWorkingDirectory() . '/assegai.json';
   }
 
+  /**
+   * @return string
+   */
   public static function getConfigDirectory(): string
   {
     return self::getWorkingDirectory() . '/config';
   }
 
+  /**
+   * @return string
+   */
+  public static function getCliSchematicsDirectory(): string
+  {
+    return self::join(self::getCliBaseDirectory(), 'src/Schematics');
+  }
+
+  /**
+   * @param ...$paths
+   * @return string
+   */
   public static function join(...$paths): string
   {
     $path = '';
