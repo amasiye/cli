@@ -7,6 +7,7 @@ use Assegai\Cli\Attributes\ValidateWorkspace;
 use Assegai\Cli\Core\AbstractCommand;
 use Assegai\Cli\Core\CommandArgument;
 use Assegai\Cli\Core\CommandOption;
+use Assegai\Cli\Core\Console\Console;
 use Assegai\Cli\Enumerations\SchematicType;
 use Assegai\Cli\Enumerations\ValueRequirementType;
 use Assegai\Cli\Enumerations\ValueType;
@@ -111,10 +112,10 @@ class GenerateCommand extends AbstractCommand
       # Create the path from the name
       $this->args->path = match($this->args->schematic) {
         'entity' => Text::getPluralForm($this->args->name),
-        SchematicType::CONTROLLER,
-        SchematicType::MODULE,
-        SchematicType::RESOURCE,
-        SchematicType::SERVICE => $this->args->name,
+        SchematicType::CONTROLLER->value,
+        SchematicType::MODULE->value,
+        SchematicType::RESOURCE->value,
+        SchematicType::SERVICE->value => $this->args->name,
         default => ''
       };
     }
