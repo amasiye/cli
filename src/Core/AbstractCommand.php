@@ -77,6 +77,8 @@ abstract class AbstractCommand implements IExecutable, IComparable
   protected stdClass $args;
   protected stdClass $options;
 
+  protected WorkspaceManager $workspaceManager;
+
   /**
    * @var Log
    */
@@ -119,6 +121,8 @@ abstract class AbstractCommand implements IExecutable, IComparable
       type: ValueRequirementType::NOT_ALLOWED,
       description: 'Outputs helpful information about this command.'
     );
+
+    $this->workspaceManager = WorkspaceManager::getInstance();
 
     $this->options = new stdClass();
     $this->args = new stdClass();

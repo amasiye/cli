@@ -388,9 +388,39 @@ class Text
    * @param string $word
    * @return string
    */
+  public static function dasherize(string $word): string
+  {
+    $tokens = preg_split('/[\W_]/', $word);
+    $output = [];
+
+    foreach ($tokens as $token)
+    {
+      $output[] = strtolower($token);
+    }
+
+    return implode('-', $output);
+  }
+
+  public static function snakerize(string $word): string
+  {
+    $tokens = preg_split('/[\W]/', $word);
+    $output = [];
+
+    foreach ($tokens as $token)
+    {
+      $output[] = strtolower($token);
+    }
+
+    return implode('_', $output);
+  }
+
+  /**
+   * @param string $word
+   * @return string
+   */
   public static function pascalize(string $word): string
   {
-    $tokens = preg_split('/[-_]/', $word);
+    $tokens = preg_split('/[\W_]/', $word);
     $output = [];
     foreach ($tokens as $token)
     {

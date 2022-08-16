@@ -2,12 +2,33 @@
 
 namespace Assegai\Cli\Util;
 
+use Assegai\Cli\Core\Console\Console;
 use Assegai\Cli\Exceptions\FileException;
 
 final class Files
 {
   private function __construct()
   {}
+
+  /**
+   * @param string $path
+   * @param bool $verbose
+   * @return bool
+   */
+  public static function createDirectory(string $path, bool $verbose = false): bool
+  {
+    if (mkdir($path, 0777, true))
+    {
+      if ($verbose)
+      {
+        Console::logCreate($path);
+      }
+
+      return true;
+    }
+
+    return false;
+  }
 
   /**
    * @param string $file1
