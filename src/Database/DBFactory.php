@@ -3,6 +3,8 @@
 namespace Assegai\Cli\Database;
 
 use Assegai\Cli\Core\Console\Console;
+use Assegai\Cli\Exceptions\FileNotFoundException;
+use Assegai\Cli\Util\Paths;
 use PDO;
 use PDOException;
 
@@ -12,6 +14,7 @@ class DBFactory
   private static array $options = [
     'dontExit' => false
   ];
+  private static array $config = [];
 
   private static array $connections = [
     'mysql'   => [],
@@ -21,9 +24,47 @@ class DBFactory
     'mongodb' => [],
   ];
 
+  /**
+   * @return void
+   * @throws FileNotFoundException
+   */
+  public static function configure(): void
+  {
+    $configPath = Paths::join(Paths::getWorkingDirectory(), DatabaseSelector::CONFIG_FILE_PATH);
+    $localConfigPath = Paths::join(Paths::getWorkingDirectory(), DatabaseSelector::LOCAL_CONFIG_FILE_PATH);
+
+    if (!file_exists($configPath))
+    {
+      throw new FileNotFoundException(DatabaseSelector::CONFIG_FILE_PATH);
+    }
+
+    self::$config = require($configPath);
+
+    if (file_exists($localConfigPath))
+    {
+      $localConfig = require($localConfigPath);
+      if (is_array($localConfig))
+      {
+        self::$config = array_merge(self::$config, $localConfig);
+      }
+    }
+  }
+
   public static function errors(): array
   {
     return self::$errors;
+  }
+
+  public static function getDatabaseTypes(): array
+  {
+    $databases = self::$config['databases'] ?? [];
+
+    if ($databaseTypes = array_keys($databases))
+    {
+      return $databaseTypes;
+    }
+
+    return [];
   }
 
   public static function getSQLConnection(array $config, ?string $dialect = 'mysql'): PDO {
