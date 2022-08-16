@@ -8,7 +8,10 @@ use Assegai\Cli\Core\CommandArgument;
 use Assegai\Cli\Core\CommandOption;
 use Assegai\Cli\Enumerations\ValueRequirementType;
 use Assegai\Cli\Enumerations\ValueType;
+use Assegai\Cli\Exceptions\FileNotFoundException;
+use Assegai\Cli\Exceptions\WorkspaceException;
 use Assegai\Cli\Interfaces\IArgumentHost;
+use Assegai\Cli\Interfaces\IExecutionContext;
 
 #[Command(
   name: 'new',
@@ -26,9 +29,16 @@ use Assegai\Cli\Interfaces\IArgumentHost;
 )]
 class NewCommand extends AbstractCommand
 {
-  public function execute(IArgumentHost $context): int
+  /**
+   * @param IArgumentHost|IExecutionContext $context
+   * @return int
+   * @throws FileNotFoundException
+   * @throws WorkspaceException
+   */
+  public function execute(IArgumentHost|IExecutionContext $context): int
   {
-    // TODO: Implement execute() method.
+    $this->workspaceManager->init(projectName: $this->args->name ?? '', args: $this->args);
+    $this->workspaceManager->install();
 
     return Command::SUCCESS;
   }
