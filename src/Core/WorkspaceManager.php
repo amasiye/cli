@@ -193,12 +193,14 @@ final class WorkspaceManager
       $databasePort = filter_var($databasePort, FILTER_VALIDATE_INT);
 
       $newDatabaseConfig = [
-        $databaseType->value() => [
-          $databaseName => [
-            'host' => $databaseHost ?? 'localhost',
-            'user' => $databaseUser ?? 'root',
-            'password' => $databasePassword,
-            'port' => $databasePort ?? 3306,
+        'databases' => [
+          $databaseType->value() => [
+            $databaseName => [
+              'host' => $databaseHost ?? 'localhost',
+              'user' => $databaseUser ?? 'root',
+              'password' => $databasePassword,
+              'port' => $databasePort ?? 3306,
+            ]
           ]
         ]
       ];
