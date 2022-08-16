@@ -401,6 +401,19 @@ class Text
     return implode('-', $output);
   }
 
+  public static function snakerize(string $word): string
+  {
+    $tokens = preg_split('/[\W]/', $word);
+    $output = [];
+
+    foreach ($tokens as $token)
+    {
+      $output[] = strtolower($token);
+    }
+
+    return implode('_', $output);
+  }
+
   /**
    * @param string $word
    * @return string
