@@ -11,6 +11,7 @@ use Assegai\Cli\Commands\ListCommand;
 use Assegai\Cli\Commands\NewCommand;
 use Assegai\Cli\Commands\ServeCommand;
 use Assegai\Cli\Commands\UpdateCommand;
+use Assegai\Cli\Commands\TestCommand;
 use Assegai\Cli\Commands\VersionCommand;
 use Assegai\Cli\Core\App;
 use Assegai\Cli\Core\AssegaiCliFactory;
@@ -21,13 +22,14 @@ function bootstrap(): void
 
   $app
     ->addAll([
-      new NewCommand(),
       new AddCommand(),
       new GenerateCommand(),
       new HelpCommand(),
       new InfoCommand(),
       new ListCommand(),
+      new NewCommand(),
       new ServeCommand(),
+      new TestCommand(),
       new UpdateCommand(),
       new VersionCommand(),
     ])
