@@ -35,7 +35,7 @@ class TestCommand extends AbstractCommand
   {
     $args = implode(' ', $context->getArgs());
     $codeception = Paths::join(Paths::getWorkingDirectory(), 'vendor/bin/codecept');
-    $testResult = passthru("$codeception $args");
+    $testResult = passthru("$codeception --ansi $args");
 
     if (false === $testResult)
     {
