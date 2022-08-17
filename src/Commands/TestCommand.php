@@ -27,7 +27,6 @@ use Assegai\Cli\Util\Paths;
 )]
 class TestCommand extends AbstractCommand
 {
-
   /**
    * @throws TestException
    */
