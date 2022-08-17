@@ -45,10 +45,9 @@ class ServeCommand extends AbstractCommand
    */
   public function execute(IArgumentHost|IExecutionContext $context): int
   {
-    // TODO: Implement execute() method.
     $config = Config::get();
     $host = 'localhost';
-    $port = '3000';
+    $port = '5000';
     $routerPath = "assegai-router.php";
 
     if (empty($config))
@@ -79,8 +78,17 @@ class ServeCommand extends AbstractCommand
     }
 
     $router = file_exists(Paths::getWorkingDirectory() . "/$routerPath") ? " $routerPath" : "";
+    if (isset($this->options->host))
+    {
+      $host = $this->options->host;
+    }
 
-    $command = "php -S $host:${port}${router}";
+    if (isset($this->options->port))
+    {
+      $port = $this->options->port;
+    }
+
+    $command = sprintf("php -S %s:%s%s", $host, $port, $router);
     if (exec($command) === false)
     {
       throw new ConsoleException(message: 'Browser exception');
