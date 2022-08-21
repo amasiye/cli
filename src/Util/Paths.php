@@ -89,4 +89,17 @@ final class Paths
     $path = preg_replace('/\/+/', '/', $path);
     return rtrim($path, '/');
   }
+
+  public static function pascalize(string $path): string
+  {
+    $tokens = explode(DIRECTORY_SEPARATOR, $path);
+    $parts = [];
+
+    foreach ($tokens as $token)
+    {
+      $parts[] = Text::pascalize($token);
+    }
+
+    return implode(DIRECTORY_SEPARATOR, $parts);
+  }
 }
