@@ -2,6 +2,7 @@
 
 namespace Assegai\Cli\Core;
 
+use Assegai\Cli\Attributes\Action;
 use Assegai\Cli\Attributes\Command;
 use Assegai\Cli\Core\Console\Console;
 use Assegai\Cli\Enumerations\Color\Color;
@@ -9,14 +10,18 @@ use Assegai\Cli\Enumerations\ValueRequirementType;
 use Assegai\Cli\Exceptions\ConsoleException;
 use Assegai\Cli\Exceptions\InvalidArgumentException;
 use Assegai\Cli\Exceptions\InvalidOptionException;
+use Assegai\Cli\Interfaces\IActionHandler;
 use Assegai\Cli\Interfaces\IArgumentHost;
 use Assegai\Cli\Interfaces\IComparable;
 use Assegai\Cli\Interfaces\IExecutable;
+use Assegai\Cli\Interfaces\IExecutionContext;
 use Assegai\Cli\Util\Logger\Log;
 use Assegai\Cli\Util\Paths;
 use Assegai\Cli\Util\Text;
 use ReflectionAttribute;
 use ReflectionClass;
+use ReflectionException;
+use ReflectionMethod;
 use stdClass;
 
 /**
@@ -30,7 +35,7 @@ use stdClass;
 /**
  *
  */
-abstract class AbstractCommand implements IExecutable, IComparable
+abstract class AbstractCommand implements IExecutable, IComparable, IActionHandler
 {
   /**
    * @var string
@@ -73,6 +78,9 @@ abstract class AbstractCommand implements IExecutable, IComparable
 
   /** @var CommandOption[] $activatedOptions */
   protected array $activatedOptions = [];
+
+  /** @var ReflectionMethod[] $availableActions */
+  protected array $availableActions = [];
 
   protected stdClass $args;
   protected stdClass $options;
@@ -122,10 +130,38 @@ abstract class AbstractCommand implements IExecutable, IComparable
       description: 'Outputs helpful information about this command.'
     );
 
+    $reflectionMethods = $reflection->getMethods();
+
+    foreach ($reflectionMethods as $method)
+    {
+      $actionAttributes = $method->getAttributes(Action::class);
+
+      if ($actionAttributes)
+      {
+        $this->availableActions[$method->getShortName()] = $method;
+      }
+    }
+
     $this->workspaceManager = WorkspaceManager::getInstance();
 
     $this->options = new stdClass();
     $this->args = new stdClass();
+  }
+
+  /**
+   * @param string $action
+   * @param IExecutionContext $context
+   * @return int
+   * @throws ReflectionException
+   */
+  public function handle(string $action, IExecutionContext $context): int
+  {
+    if ($actionHandler = $this->getAction($action))
+    {
+      return $actionHandler->invokeArgs($this, [$context]);
+    }
+
+    return Command::ERROR_DEFAULT;
   }
 
   /**
@@ -216,7 +252,7 @@ abstract class AbstractCommand implements IExecutable, IComparable
       foreach ($this->availableArguments as $argument)
       {
         $name = $argument->alias ? "$argument->name, $argument->alias" : $argument->name;
-        $body .= sprintf("  %-20s %s" . PHP_EOL, $name, $argument->description);
+        $body .= sprintf("  %-20s %s" . PHP_EOL, $name, Text::terminate($argument->description));
       }
     }
 
@@ -235,7 +271,7 @@ abstract class AbstractCommand implements IExecutable, IComparable
               default => $option->defaultValue
             };
         }
-        $body .= sprintf("  %-20s %s" . PHP_EOL, $name, $description);
+        $body .= sprintf("  %-20s %s" . PHP_EOL, $name, Text::terminate($description));
       }
     }
 
@@ -581,5 +617,10 @@ abstract class AbstractCommand implements IExecutable, IComparable
       $name = Text::kebabToCamelCase($argument->name);
       $this->args->$name = $argument->getValue();
     }
+  }
+
+  protected function getAction(string $name): ?ReflectionMethod
+  {
+    return $this->availableActions[$name] ?? null;
   }
 }
