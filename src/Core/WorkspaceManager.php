@@ -59,6 +59,22 @@ final class WorkspaceManager
   }
 
   /**
+   * @return bool
+   */
+  public static function hasLocalComposer(): bool
+  {
+    return file_exists(Paths::join(Paths::getWorkingDirectory(), 'composer.phar'));
+  }
+
+  /**
+   * @return bool
+   */
+  public static function hasGlobalComposer(): bool
+  {
+    return !empty(shell_exec("which composer"));
+  }
+
+  /**
    * @param string $projectName
    * @param object $args
    * @return void
