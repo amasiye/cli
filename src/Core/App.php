@@ -2,6 +2,7 @@
 
 namespace Assegai\Cli\Core;
 
+use Assegai\Cli\Attributes\Command;
 use Assegai\Cli\Core\Console\Console;
 use Assegai\Cli\Exceptions\ConsoleException;
 use Assegai\Cli\Exceptions\InsufficientDetailsException;
@@ -100,7 +101,13 @@ final class App
       {
         $attribute->newInstance();
       }
-      $command->execute($this->context);
+
+      $result = $command->execute($this->context);
+
+      if ($result !== Command::SUCCESS)
+      {
+        throw new ConsoleException("Error returned while executing $commandName - Err($result)");
+      }
     }
     catch (ConsoleException|ReflectionException $e)
     {
