@@ -9,6 +9,7 @@ use Assegai\Cli\Commands\HelpCommand;
 use Assegai\Cli\Commands\InfoCommand;
 use Assegai\Cli\Commands\ListCommand;
 use Assegai\Cli\Commands\NewCommand;
+use Assegai\Cli\Commands\SchemaCommand;
 use Assegai\Cli\Commands\ServeCommand;
 use Assegai\Cli\Commands\UpdateCommand;
 use Assegai\Cli\Commands\TestCommand;
@@ -29,6 +30,7 @@ function bootstrap(): void
       new ListCommand(),
       new NewCommand(),
       new ServeCommand(),
+      new SchemaCommand(),
       new TestCommand(),
       new UpdateCommand(),
       new VersionCommand(),

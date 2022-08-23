@@ -90,6 +90,10 @@ final class Paths
     return rtrim($path, '/');
   }
 
+  /**
+   * @param string $path
+   * @return string
+   */
   public static function pascalize(string $path): string
   {
     $tokens = explode(DIRECTORY_SEPARATOR, $path);

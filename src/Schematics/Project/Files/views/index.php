@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>%== __name__ ==%</title>
+
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="/js/main.js"></script>
+</head>
+<body>
+<div class="container">
+    <h1 class="title"><?= $title; ?></h1>
+    <h3 class="subtitle"><?= $subtitle ?></h3>
+    <div class="row">
+        <ul>
+            <li><a href="<?= $welcomeLink ?>">Welcome</a></li>
+            <li><a href="<?= $getStartedLink ?>">Get Started</a></li>
+        </ul>
+        <ul>
+            <li><a href="<?= $documentationLink; ?>">Documentation</a></li>
+            <li><a href="<?= $donateLink; ?>">Donate</a></li>
+        </ul>
+    </div>
+</div>
+</body>
+</html>
