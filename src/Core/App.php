@@ -72,6 +72,7 @@ final class App
         $this->$prop = $value;
       }
     }
+
     return $this;
   }
 
