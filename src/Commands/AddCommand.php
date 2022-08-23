@@ -93,8 +93,7 @@ class AddCommand extends AbstractCommand
   #[Action]
   public function orm(IExecutionContext $context): int
   {
-    // TODO: Implement the orm() action method
-    Console::info('Adding orm...');
+    Console::info('Adding assegaiphp/orm...');
     if (false === system("$this->composer $this->command", $errorCode))
     {
       throw new WorkspaceException("Failed to execute $this->command. Error Code - $errorCode");
