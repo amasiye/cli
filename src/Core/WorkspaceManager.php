@@ -9,7 +9,9 @@ use Assegai\Cli\Core\Menus\MenuItem;
 use Assegai\Cli\Enumerations\Color\Color;
 use Assegai\Cli\Enumerations\Color\TextStyle;
 use Assegai\Cli\Exceptions\FileNotFoundException;
+use Assegai\Cli\Exceptions\InvalidSchemaException;
 use Assegai\Cli\Exceptions\WorkspaceException;
+use Assegai\Cli\Schematics\TemplateEngine;
 use Assegai\Cli\Util\Arrays;
 use Assegai\Cli\Util\Paths;
 use Assegai\Cli\Util\Text;
@@ -37,9 +39,13 @@ final class WorkspaceManager
    * @var string
    */
   private string $projectName = '';
+  /**
+   * @var TemplateEngine|null
+   */
+  private ?TemplateEngine $templateEngine = null;
 
   /**
-   *
+   * Constructs a WorkspaceManager
    */
   private final function __construct()
   {
@@ -78,10 +84,28 @@ final class WorkspaceManager
    * @param string $projectName
    * @param object $args
    * @return void
+   * @throws InvalidSchemaException
    * @throws WorkspaceException
+   * @throws FileNotFoundException
    */
   public function init(string $projectName, object $args): void
   {
+    $projectSchemaPath = Paths::join(Paths::getCliSchematicsDirectory(), 'Project', 'schema.php');
+    if (! file_exists($projectSchemaPath) )
+    {
+      $filename = basename($projectSchemaPath);
+      throw new WorkspaceException("Failed to load project $filename.");
+    }
+
+    $projectSchema = require($projectSchemaPath);
+
+    if (!is_array($projectSchema))
+    {
+      throw new InvalidSchemaException("Project schema is not an array.");
+    }
+
+    $this->templateEngine = new TemplateEngine(schema: $projectSchema);
+
     if (! $projectName )
     {
       $projectName = Console::prompt(message: "What name would you like to use for the new project?", defaultValue: "assegai-app");
@@ -159,11 +183,27 @@ final class WorkspaceManager
       throw new WorkspaceException("Failed to copy template files");
     }
 
+    // TODO: Resolve paths and content
+    $this->templateEngine->resolvePath(pathTemplate: $templatePath);
+    $args->name = $projectName;
+    $this->templateEngine->setArgs($args);
+    $viewIndexPath = Paths::join($this->projectPath, 'views', 'index.php');
+
+    if (!file_exists($viewIndexPath))
+    {
+      throw new FileNotFoundException($viewIndexPath);
+    }
+
+    $viewIndexContent = file_get_contents($viewIndexPath);
+    $viewIndexContent = $this->templateEngine->resolveContent($viewIndexContent);
+
+    $this->writeFile($viewIndexPath, $viewIndexContent, $this->verbose);
+
     $assegaiConfigPath = Paths::join($this->projectName, 'assegai.json');
-    $this->writeFile($assegaiConfigPath, $assegaiConfig, false);
+    $this->writeFile($assegaiConfigPath, $assegaiConfig, $this->verbose);
 
     $composerConfigPath = Paths::join($this->projectName, 'composer.json');
-    $this->writeFile($composerConfigPath, $composerConfig, false);
+    $this->writeFile($composerConfigPath, $composerConfig, $this->verbose);
   }
 
   /**
@@ -301,7 +341,9 @@ final class WorkspaceManager
   {
     $isUpdate = file_exists($filename);
     $workingDirectory = Paths::getWorkingDirectory();
-    $path = Paths::join($workingDirectory, $filename);
+    $path = str_starts_with($filename, $workingDirectory)
+      ? $filename
+      : Paths::join($workingDirectory, $filename);
 
     $result = file_put_contents($path, $data);
 

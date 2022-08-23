@@ -311,9 +311,9 @@ final class TemplateEngine
       }
     }
 
-    return empty($method)
+    return (empty($method)
       ? $this->getArgs()->$propName
-      : call_user_func_array([$this, $method], [$this->getArgs()->$propName]);
+      : call_user_func_array([$this, $method], [$this->getArgs()->$propName])) ?? '';
   }
 
   /**

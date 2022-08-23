@@ -401,6 +401,10 @@ class Text
     return implode('-', $output);
   }
 
+  /**
+   * @param string $word
+   * @return string
+   */
   public static function snakerize(string $word): string
   {
     $tokens = preg_split('/\W/', $word);
@@ -428,6 +432,39 @@ class Text
     }
 
     return implode('', $output);
+  }
+
+  /**
+   * @param string $word
+   * @return string
+   */
+  public static function titleCase(string $word): string
+  {
+    $tokens = preg_split('/[\W_]/', $word);
+    $output = [];
+    foreach ($tokens as $token)
+    {
+      $output[] = ucfirst($token);
+    }
+
+    return implode(' ', $output);
+  }
+
+  /**
+   * @param string $word
+   * @return string
+   */
+  public static function sentenceCase(string $word): string
+  {
+    $tokens = preg_split('/[!.?]/', $word);
+    $output = [];
+    foreach ($tokens as $token)
+    {
+      $output[] = strtolower($token);
+    }
+
+    $output = implode(' ', $output);
+    return ucfirst($output);
   }
 
   /**

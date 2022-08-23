@@ -7,7 +7,7 @@
     <script src="/js/main.js"></script>
 </head>
 <body>
-<div class="container">
+<div class="container page-container">
     <h1 class="title"><?= $title; ?></h1>
     <h3 class="subtitle"><?= $subtitle ?></h3>
     <div class="row">
