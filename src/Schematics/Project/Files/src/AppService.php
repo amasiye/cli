@@ -12,7 +12,7 @@ class AppService
   {
     return new View('index', [
       'title' => 'Muli Bwanji',
-      'subtitle' => 'AssegaiPHP',
+      'subtitle' => '&ndash;&ndash; AssegaiPHP &ndash;&ndash;>',
       'welcomeLink' => 'https://assegaiphp.ml/',
       'getStartedLink' => 'https://assegaiphp.ml/getting-started/',
       'documentationLink' => 'https://docs.assegaiphp.ml/',
