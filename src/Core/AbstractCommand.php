@@ -82,9 +82,18 @@ abstract class AbstractCommand implements IExecutable, IComparable, IActionHandl
   /** @var ReflectionMethod[] $availableActions */
   protected array $availableActions = [];
 
+  /**
+   * @var stdClass
+   */
   protected stdClass $args;
+  /**
+   * @var stdClass
+   */
   protected stdClass $options;
 
+  /**
+   * @var WorkspaceManager
+   */
   protected WorkspaceManager $workspaceManager;
 
   /**
@@ -184,6 +193,9 @@ abstract class AbstractCommand implements IExecutable, IComparable, IActionHandl
     echo $this->getHeader() . PHP_EOL;
   }
 
+  /**
+   * @return string
+   */
   public function getUsage(): string
   {
     $usage = $this->name;
@@ -438,6 +450,10 @@ abstract class AbstractCommand implements IExecutable, IComparable, IActionHandl
     return $this;
   }
 
+  /**
+   * @param CommandArgument $argument
+   * @return $this
+   */
   public function addArgument(CommandArgument $argument): self
   {
     if (! $this->hasArgument(name: $argument->name, alias: $argument->alias) )
@@ -520,6 +536,9 @@ abstract class AbstractCommand implements IExecutable, IComparable, IActionHandl
     return false;
   }
 
+  /**
+   * @return array
+   */
   private function getShortOptionsList(): array
   {
     // NOTE: Could possibly use associative array
@@ -536,6 +555,9 @@ abstract class AbstractCommand implements IExecutable, IComparable, IActionHandl
     return $options;
   }
 
+  /**
+   * @return array
+   */
   private function getLongOptionsList(): array
   {
     return array_map(function ($option) {
@@ -543,26 +565,45 @@ abstract class AbstractCommand implements IExecutable, IComparable, IActionHandl
     }, $this->availableOptions);
   }
 
+  /**
+   * @param string $token
+   * @return bool
+   */
   private function isShortOption(string $token): bool
   {
     return (bool)preg_match('/^-\w+/', $token);
   }
 
+  /**
+   * @param string $name
+   * @return bool
+   */
   private function isNotShortOption(string $name): bool
   {
     return !$this->isShortOption($name);
   }
 
+  /**
+   * @param string $token
+   * @return bool
+   */
   private function isLongOption(string $token): bool
   {
     return (bool)preg_match('/^--\w+/', $token);
   }
 
+  /**
+   * @param string $name
+   * @return bool
+   */
   private function isNotLongOption(string $name): bool
   {
     return !$this->isLongOption($name);
   }
 
+  /**
+   * @return void
+   */
   private function validateRequiredArguments(): void
   {
     # Collect required arguments
@@ -598,6 +639,9 @@ abstract class AbstractCommand implements IExecutable, IComparable, IActionHandl
     }
   }
 
+  /**
+   * @return void
+   */
   private function bindOptions(): void
   {
     foreach ($this->activatedOptions as $option)
@@ -619,6 +663,10 @@ abstract class AbstractCommand implements IExecutable, IComparable, IActionHandl
     }
   }
 
+  /**
+   * @param string $name
+   * @return ReflectionMethod|null
+   */
   protected function getAction(string $name): ?ReflectionMethod
   {
     return $this->availableActions[$name] ?? null;
