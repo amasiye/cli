@@ -11,7 +11,7 @@ class %== __name@pascalize__ ==%Service
 {
   function create(Create%== __singular@pascalize__ ==%Dto $create%== __singular@pascalize__ ==%Dto)
   {
-    return 'This action adds a new %== __singular@lowercase__ ==%';
+    return "This action adds a new %== __singular@lowercase__ ==%";
   }
 
   function findAll()
