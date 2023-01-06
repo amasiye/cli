@@ -32,9 +32,6 @@ use stdClass;
   usage: 'command [options] [arguments]',
   description: 'The base command'
 )]
-/**
- *
- */
 abstract class AbstractCommand implements IExecutable, IComparable, IActionHandler
 {
   /**
@@ -158,9 +155,10 @@ abstract class AbstractCommand implements IExecutable, IComparable, IActionHandl
   }
 
   /**
-   * @param string $action
-   * @param IExecutionContext $context
-   * @return int
+   * Handles the given action in the provided execution context.
+   * @param string $action The action to be handled.
+   * @param IExecutionContext $context The execution context in which to handle the action.
+   * @return int Returns the exit code of the action.
    * @throws ReflectionException
    */
   public function handle(string $action, IExecutionContext $context): int
@@ -171,6 +169,14 @@ abstract class AbstractCommand implements IExecutable, IComparable, IActionHandl
     }
 
     return Command::ERROR_DEFAULT;
+  }
+
+  /**
+   * @inheritDoc
+   */
+  public function canHandle(string $action): bool
+  {
+    return !empty($this->getAction($action));
   }
 
   /**
@@ -265,6 +271,29 @@ abstract class AbstractCommand implements IExecutable, IComparable, IActionHandl
       {
         $name = $argument->alias ? "$argument->name, $argument->alias" : $argument->name;
         $body .= sprintf("  %-20s %s" . PHP_EOL, $name, Text::terminate($argument->description));
+      }
+    }
+
+    if ($this->availableActions)
+    {
+      $body .= PHP_EOL . Color::YELLOW . "Actions: " . Color::RESET . PHP_EOL;
+      foreach ($this->availableActions as $key => $action)
+      {
+        $actionAttributes = $action->getAttributes(Action::class);
+        $name = $key;
+        $description = '';
+
+        foreach ($actionAttributes as $actionAttribute)
+        {
+          /** @var Action $actionAttributeInstance */
+          $actionAttributeInstance = $actionAttribute->newInstance();
+          if ($actionAttributeInstance->alias)
+          {
+            $name .= ", $actionAttributeInstance->alias";
+          }
+          $description = $actionAttributeInstance->description;
+        }
+        $body .= sprintf("  %-20s %s" . PHP_EOL, $name, Text::terminate($description));
       }
     }
 
