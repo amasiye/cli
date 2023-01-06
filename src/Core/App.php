@@ -12,26 +12,30 @@ use ReflectionClass;
 use ReflectionException;
 
 /**
- *
+ * This class represents the main application.
  */
 final class App
 {
   /**
+   * An array of commands that have been registered with the application.
    * @var IExecutable[] $commands
    */
   protected array $commands = [];
 
   /**
+   * An array of short names that have been registered for commands.
    * @var string[] $commands
    */
   protected array $shortNames = [];
 
   /**
+   * An array of directories to search when looking for commands.
    * @var array
    */
   protected array $searchDirectories = [];
 
   /**
+   * The context in which actions are being executed.
    * @var ActionContext
    */
   protected ActionContext $context;
@@ -60,7 +64,8 @@ final class App
   }
 
   /**
-   * @param array|object $config
+   * Sets the configuration for the app.
+   * @param array|object $config An array or object containing the configuration values to set.
    * @return $this
    */
   public function setConfig(array|object $config): App
@@ -77,6 +82,7 @@ final class App
   }
 
   /**
+   * Runs the app.
    * @return void
    */
   public function run(): void
@@ -84,6 +90,11 @@ final class App
     try
     {
       $commandName = $this->context->getActionName();
+
+      if (empty($commandName))
+      {
+        $commandName = 'help';
+      }
       /** @var AbstractCommand $command */
       $command = $this->commands[$commandName] ?? $this->commands[$this->shortNames[$commandName]] ?? $this->commands['help'];
       $command->configure();
@@ -117,6 +128,7 @@ final class App
   }
 
   /**
+   * Returns an array of the commands that have been registered with the app.
    * @return IExecutable[]
    */
   public function getCommands(): array
@@ -125,6 +137,7 @@ final class App
   }
 
   /**
+   * Registers a new command with the app.
    * @param AbstractCommand|IExecutable $command
    * @return App
    */
@@ -143,6 +156,7 @@ final class App
   }
 
   /**
+   * Registers many new commands at once.
    * @param array<AbstractCommand|IExecutable> $commands
    * @return $this
    */
@@ -157,6 +171,7 @@ final class App
   }
 
   /**
+   * De-registers a command with the app.
    * @param AbstractCommand|IExecutable $command
    * @return App
    */
@@ -173,6 +188,7 @@ final class App
   }
 
   /**
+   * Determines whether the app has a particular command registered.
    * @param AbstractCommand|IExecutable|string $command
    * @return bool
    */
