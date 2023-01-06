@@ -96,7 +96,7 @@ class ServeCommand extends AbstractCommand
 
     Console::log(message: sprintf("Starting Server...\n%sListening on port %s\n", Color::YELLOW, $port));
 
-    $openBrowser = $this->options->open ?? $config?->development?->openBrowser ?? false;
+    $openBrowser = isset($this->options->open) ?? isset($config?->development?->openBrowser) ?? false;
     if ($openBrowser)
     {
       $browser = match (true) {
