@@ -64,6 +64,7 @@ body {
 
 .subtitle {
     text-align: center;
+    font-family: monospace;
 }
 
 .container {
