@@ -2,14 +2,14 @@
 
 _assegai_completion()
 {
-  local cur prev line opts database_names
+  local cur prev line opts database_types
   COMPREPLY=()
   cur="${COMP_WORDS[COMP_CWORD]}"
   prev="${COMP_WORDS[COMP_CWORD-1]}"
   prev_prev="${COMP_WORDS[COMP_CWORD-2]}"
   line="${COMP_LINE}"
   opts=""
-  database_types="mysql pgsql sqlite"
+  database_types="mysql pgsql sqlite mongo"
 
   case "$prev_prev" in
     database)
@@ -55,8 +55,12 @@ _assegai_completion()
     return
     ;;
 
-    config|init|info|lint|new|serve|test|update|version)
+    add|help|info|lint|new|remove|script|serve|test|update|version)
     return
+    ;;
+
+    completion)
+    COMPREPLY=($(compgen -W "script" -- "$cur"))
     ;;
 
     database)
@@ -76,7 +80,7 @@ _assegai_completion()
     ;;
 
     **)
-    COMPREPLY=($(compgen -W "config database generate info init lint list migration new serve test update version" -- "$cur"))
+    COMPREPLY=($(compgen -W "add completion generate help info list new remove serve schema test update version" -- "$cur"))
     ;;
   esac
 }
