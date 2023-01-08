@@ -194,11 +194,11 @@ final class SchematicEngine
 
         if ($pathsAreEqual)
         {
-          Console::logUpdate($resolvedPathBasename, $bytes);
+          Console::logFileUpdate($resolvedPathBasename, $bytes);
         }
         else
         {
-          Console::logCreate($resolvedPathBasename, $bytes);
+          Console::logFileCreate($resolvedPathBasename, $bytes);
         }
       }
     }
@@ -329,7 +329,7 @@ final class SchematicEngine
             if ($bytes = file_put_contents($modulePath, $resolvedContent))
             {
               $moduleBasename = basename($modulePath);
-              Console::logUpdate("$moduleBasename", $bytes);
+              Console::logFileUpdate("$moduleBasename", $bytes);
             }
           }
         }
