@@ -48,7 +48,7 @@ use ReflectionException;
 class SchemaCommand extends AbstractCommand
 {
   protected ?IDataSource $dataSource = null;
-  private ?IEntityManager $entityManager = null;
+  private ?EntityManager $entityManager = null;
 
   /**
    * @param IArgumentHost $context
@@ -59,6 +59,25 @@ class SchemaCommand extends AbstractCommand
   public function execute(IArgumentHost $context): int
   {
     return $this->handle(action: $this->args->action, context: $context);
+  }
+
+  #[Action(
+    description: 'Creates the migrations directory, creates the database specified in your config, and
+                       runs existing migrations.'
+  )]
+  public function init(IExecutionContext $context): int
+  {
+    // TODO: Implement init() method.
+    return Command::SUCCESS;
+  }
+
+  #[Action(
+    description: 'Creates the database specified in your config, and then runs any existing migrations.'
+  )]
+  public function setup(IExecutionContext $context): int
+  {
+    // TODO: Implement setup() method.
+    return Command::SUCCESS;
   }
 
   /**
@@ -106,6 +125,7 @@ class SchemaCommand extends AbstractCommand
 
     $dataSource = DataSourceFactory::get(driver: $driver, name: $schema);
 
+    $moduleManage = new
     $dataSource->synchronize();
     # For each entity
     $entities = $this->getScopeEntities();
@@ -125,7 +145,9 @@ class SchemaCommand extends AbstractCommand
    * @param IExecutionContext $context
    * @return int
    */
-  #[Action]
+  #[Action(
+    description: ''
+  )]
   public function log(IExecutionContext $context): int
   {
     // TODO: Implement log() method.
@@ -136,7 +158,9 @@ class SchemaCommand extends AbstractCommand
    * @param IExecutionContext $context
    * @return int
    */
-  #[Action]
+  #[Action(
+    description: 'Drops the database defined in the config'
+  )]
   public function drop(IExecutionContext $context): int
   {
     // TODO: Implement drop() method.
