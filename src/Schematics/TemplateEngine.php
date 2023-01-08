@@ -223,7 +223,8 @@ final class TemplateEngine
   public function namespacify(string $path): string
   {
     $path = Paths::pascalize($path);
-    return str_replace(DIRECTORY_SEPARATOR, '\\', $path);
+    $result = str_replace(DIRECTORY_SEPARATOR, '\\', $path);
+    return trim('/', $result);
   }
 
   /**
