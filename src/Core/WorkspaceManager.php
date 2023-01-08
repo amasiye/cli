@@ -153,7 +153,7 @@ final class WorkspaceManager
         "codeception/codeception" => "^4.2"
       ],
       "scripts" => [
-        "start" => "php -S localhost =>5000 assegai-router.php"
+        "start" => "php -S localhost:5000 assegai-router.php"
       ],
       "license" => "MIT",
       "autoload" => [
@@ -166,7 +166,6 @@ final class WorkspaceManager
         "php" => ">=8.1",
         "ext-pdo" => "*",
         "ext-curl" => "*",
-        "assegaiphp/core" => "*",
         "vlucas/phpdotenv" => "^5.4",
       ]
     ];
@@ -182,22 +181,6 @@ final class WorkspaceManager
     {
       throw new WorkspaceException("Failed to copy template files");
     }
-
-    // TODO: Resolve paths and content
-    $this->templateEngine->resolvePath(pathTemplate: $templatePath);
-    $args->name = $projectName;
-    $this->templateEngine->setArgs($args);
-    $viewIndexPath = Paths::join($this->projectPath, 'views', 'index.php');
-
-    if (!file_exists($viewIndexPath))
-    {
-      throw new FileNotFoundException($viewIndexPath);
-    }
-
-    $viewIndexContent = file_get_contents($viewIndexPath);
-    $viewIndexContent = $this->templateEngine->resolveContent($viewIndexContent);
-
-    $this->writeFile($viewIndexPath, $viewIndexContent, $this->verbose);
 
     $assegaiConfigPath = Paths::join($this->projectName, 'assegai.json');
     $this->writeFile($assegaiConfigPath, $assegaiConfig, $this->verbose);
@@ -218,8 +201,11 @@ final class WorkspaceManager
       TextStyle::BLINK->value, Color::LIGHT_BLUE, Color::WHITE, Color::RESET
     );
 
+    $shouldInstallOrm = false;
+
     if (Console::confirm(message: 'Would you like to connect to a database?'))
     {
+      $shouldInstallOrm = true;
       $databaseMenu = new Menu(title: '');
       $databaseTypes = $this->getDatabaseTypes(path: Paths::join($this->projectPath, 'config/default.php'));
       foreach ($databaseTypes as $type)
@@ -283,7 +269,11 @@ final class WorkspaceManager
       }
     }
 
-    $installCommand = "cd $this->projectPath && composer update";
+    $installCommand = "cd $this->projectPath && composer --ansi require assegaiphp/core";
+    if ($shouldInstallOrm)
+    {
+      $installCommand .= " && composer --ansi require assegaiphp/orm";
+    }
 
     $dependencyInstallationResult = system(command: $installCommand);
 
@@ -353,11 +343,11 @@ final class WorkspaceManager
       {
         if ($isUpdate)
         {
-          Console::logUpdate(path: $filename, filesize: $result);
+          Console::logFileUpdate(path: $filename, newFileSize: $result);
         }
         else
         {
-          Console::logCreate(path: $filename, filesize: $result);
+          Console::logFileCreate(path: $filename, newFileSize: $result);
         }
       }
 
@@ -391,7 +381,7 @@ final class WorkspaceManager
 
     if ($verbose)
     {
-      Console::logCreate($path);
+      Console::logFileCreate($path);
     }
 
     return $path;
