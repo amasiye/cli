@@ -49,4 +49,13 @@ return [
       'entityPasswordFieldName' => 'password',
     ],
   ],
+  'contact' => [
+    'links' => [
+      'assegai_website' => 'https://assegaiphp.com',
+      'guide_link' => 'https://assegaiphp.com/guide',
+      'documentation_link' => 'https://docs.assegaiphp.com',
+      'support_link' => 'https://assegaiphp.com/support',
+      'blog_link' => 'https://blog.assegaiphp.com',
+    ]
+  ]
 ];

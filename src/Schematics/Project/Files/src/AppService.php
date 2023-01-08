@@ -3,6 +3,7 @@
 namespace Assegai\App;
 
 use Assegai\Core\Attributes\Injectable;
+use Assegai\Core\Config;
 use Assegai\Core\Rendering\View;
 
 #[Injectable]
@@ -13,10 +14,10 @@ class AppService
     return new View('index', [
       'title' => 'Muli Bwanji',
       'subtitle' => '&ndash;&ndash; AssegaiPHP &ndash;&ndash;>',
-      'welcomeLink' => 'https://assegaiphp.ml/',
-      'getStartedLink' => 'https://assegaiphp.ml/getting-started/',
-      'documentationLink' => 'https://docs.assegaiphp.ml/',
-      'donateLink' => 'https://donate.assegaiphp.ml/',
+      'welcomeLink' => Config::get('contact')['links']['assegai_website'],
+      'getStartedLink' => Config::get('contact')['links']['guide_link'],
+      'documentationLink' => Config::get('contact')['links']['documentation_link'],
+      'donateLink' => Config::get('contact')['links']['support_link'],
     ]);
   }
 }
