@@ -38,7 +38,7 @@ class VersionCommand extends AbstractCommand
     $basePath = Paths::getCliBaseDirectory();
     $versionOutputFile = "$basePath/res/version.txt";
 
-    passthru("composer global show assegaiphp/assegai-cli | grep 'versions' 1> $versionOutputFile");
+    passthru("composer global show assegaiphp/cli | grep 'versions' 1> $versionOutputFile");
 
     if (! file_exists($versionOutputFile))
     {
