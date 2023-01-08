@@ -1,3 +1,7 @@
+<div align="center">
+    <a href="https://assegaiphp.com/" target="blank"><img src="https://assegaiphp.com/images/logos/logo-cropped.png" width="200" alt="Assegai Logo"></a>
+</div>
+
 # Assegai CLI
 
 ## Requirements
