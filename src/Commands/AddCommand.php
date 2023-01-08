@@ -15,6 +15,7 @@ use Assegai\Cli\Exceptions\WorkspaceException;
 use Assegai\Cli\Interfaces\IArgumentHost;
 use Assegai\Cli\Interfaces\IExecutionContext;
 use Assegai\Cli\Util\Paths;
+use ReflectionException;
 
 /**
  *
@@ -44,12 +45,10 @@ class AddCommand extends AbstractCommand
    * @param IArgumentHost $context
    * @return int
    * @throws WorkspaceException
-   * @throws \ReflectionException
+   * @throws ReflectionException
    */
   public function execute(IArgumentHost $context): int
   {
-    Console::warn("Not implemented");
-
     $package = "assegaiphp/" . $this->args->library;
 
     if (preg_match('/\w+\/\w+/', $this->args->library))
