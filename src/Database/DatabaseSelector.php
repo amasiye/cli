@@ -215,7 +215,7 @@ final class DatabaseSelector
                   Console::error(implode("\n", $this->connection()->errorInfo()), exit: true);
                 }
 
-                Console::logCreate($this->getDatabaseName() . ' database');
+                Console::logFileCreate($this->getDatabaseName() . ' database');
               }
               catch(PDOException $e)
               {

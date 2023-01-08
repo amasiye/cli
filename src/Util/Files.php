@@ -21,7 +21,7 @@ final class Files
     {
       if ($verbose)
       {
-        Console::logCreate($path);
+        Console::logFileCreate($path);
       }
 
       return true;

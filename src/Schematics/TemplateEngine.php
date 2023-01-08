@@ -217,6 +217,17 @@ final class TemplateEngine
   }
 
   /**
+   * @param string $path
+   * @return string
+   */
+  public function namespacify(string $path): string
+  {
+    $path = Paths::pascalize($path);
+    $result = str_replace(DIRECTORY_SEPARATOR, '\\', $path);
+    return trim('/', $result);
+  }
+
+  /**
    * @param string $name
    * @return string|null
    */
@@ -301,9 +312,9 @@ final class TemplateEngine
       }
     }
 
-    return empty($method)
+    return (empty($method)
       ? $this->getArgs()->$propName
-      : call_user_func_array([$this, $method], [$this->getArgs()->$propName]);
+      : call_user_func_array([$this, $method], [$this->getArgs()->$propName])) ?? '';
   }
 
   /**

@@ -4,3 +4,4 @@
 /vendor/
 /config/local*.php
 /res/version.txt
+/dev-tools/

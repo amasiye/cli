@@ -120,7 +120,7 @@ class GenerateCommand extends AbstractCommand
       };
     }
 
-    $rootOutputPath = Paths::join($projectSourcePath, Text::pascalize($this->args->path ?? ''));
+    $rootOutputPath = Paths::join($projectSourcePath, Paths::pascalize($this->args->path ?? ''));
     $args = $this->args;
     unset($args->schematic);
 

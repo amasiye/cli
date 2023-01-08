@@ -401,9 +401,13 @@ class Text
     return implode('-', $output);
   }
 
+  /**
+   * @param string $word
+   * @return string
+   */
   public static function snakerize(string $word): string
   {
-    $tokens = preg_split('/[\W]/', $word);
+    $tokens = preg_split('/\W/', $word);
     $output = [];
 
     foreach ($tokens as $token)
@@ -434,6 +438,39 @@ class Text
    * @param string $word
    * @return string
    */
+  public static function titleCase(string $word): string
+  {
+    $tokens = preg_split('/[\W_]/', $word);
+    $output = [];
+    foreach ($tokens as $token)
+    {
+      $output[] = ucfirst($token);
+    }
+
+    return implode(' ', $output);
+  }
+
+  /**
+   * @param string $word
+   * @return string
+   */
+  public static function sentenceCase(string $word): string
+  {
+    $tokens = preg_split('/[!.?]/', $word);
+    $output = [];
+    foreach ($tokens as $token)
+    {
+      $output[] = strtolower($token);
+    }
+
+    $output = implode(' ', $output);
+    return ucfirst($output);
+  }
+
+  /**
+   * @param string $word
+   * @return string
+   */
   public static function getPluralForm(string $word): string
   {
     $inflector = new Inflector();
@@ -449,5 +486,31 @@ class Text
   {
     $inflector = new Inflector();
     return @$inflector->singular($word);
+  }
+
+  /**
+   * Determines whether a string of text ends with
+   * @param string $text
+   * @return bool
+   */
+  public static function endsWithPunctuation(string $text): bool
+  {
+    return (bool)preg_match('/[!?.]$/', $text);
+  }
+
+  /**
+   * Adds terminal punctuation to given text.
+   * @param string $text
+   * @param string $punctuation
+   * @return string
+   */
+  public static function terminate(string $text, string $punctuation = '.'): string
+  {
+    if (!in_array($punctuation, ['.', '!', '?']))
+    {
+      $punctuation = '.';
+    }
+
+    return self::endsWithPunctuation($text) ? $text : "$text{$punctuation}";
   }
 }

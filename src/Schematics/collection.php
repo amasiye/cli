@@ -14,7 +14,14 @@ $schema = [];
 
 foreach ($schematicTypes as $type)
 {
-  $schema[$type->value] = 'Assegai\Cli\Schematics\\' . Text::pascalize($type->value) . '\\' . classifySchemaName($type->value);
+  $schematicTypeName = $type->value;
+
+  if ($schematicTypeName === 'class')
+  {
+    $schematicTypeName = 'CustomClass';
+  }
+
+  $schema[$type->value] = 'Assegai\Cli\Schematics\\' . Text::pascalize($schematicTypeName) . '\\' . classifySchemaName($schematicTypeName);
 }
 
 return ['schema' => $schema];

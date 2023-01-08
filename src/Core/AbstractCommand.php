@@ -2,6 +2,7 @@
 
 namespace Assegai\Cli\Core;
 
+use Assegai\Cli\Attributes\Action;
 use Assegai\Cli\Attributes\Command;
 use Assegai\Cli\Core\Console\Console;
 use Assegai\Cli\Enumerations\Color\Color;
@@ -9,14 +10,18 @@ use Assegai\Cli\Enumerations\ValueRequirementType;
 use Assegai\Cli\Exceptions\ConsoleException;
 use Assegai\Cli\Exceptions\InvalidArgumentException;
 use Assegai\Cli\Exceptions\InvalidOptionException;
+use Assegai\Cli\Interfaces\IActionHandler;
 use Assegai\Cli\Interfaces\IArgumentHost;
 use Assegai\Cli\Interfaces\IComparable;
 use Assegai\Cli\Interfaces\IExecutable;
+use Assegai\Cli\Interfaces\IExecutionContext;
 use Assegai\Cli\Util\Logger\Log;
 use Assegai\Cli\Util\Paths;
 use Assegai\Cli\Util\Text;
 use ReflectionAttribute;
 use ReflectionClass;
+use ReflectionException;
+use ReflectionMethod;
 use stdClass;
 
 /**
@@ -27,10 +32,7 @@ use stdClass;
   usage: 'command [options] [arguments]',
   description: 'The base command'
 )]
-/**
- *
- */
-abstract class AbstractCommand implements IExecutable, IComparable
+abstract class AbstractCommand implements IExecutable, IComparable, IActionHandler
 {
   /**
    * @var string
@@ -74,9 +76,21 @@ abstract class AbstractCommand implements IExecutable, IComparable
   /** @var CommandOption[] $activatedOptions */
   protected array $activatedOptions = [];
 
+  /** @var ReflectionMethod[] $availableActions */
+  protected array $availableActions = [];
+
+  /**
+   * @var stdClass
+   */
   protected stdClass $args;
+  /**
+   * @var stdClass
+   */
   protected stdClass $options;
 
+  /**
+   * @var WorkspaceManager
+   */
   protected WorkspaceManager $workspaceManager;
 
   /**
@@ -122,10 +136,47 @@ abstract class AbstractCommand implements IExecutable, IComparable
       description: 'Outputs helpful information about this command.'
     );
 
+    $reflectionMethods = $reflection->getMethods();
+
+    foreach ($reflectionMethods as $method)
+    {
+      $actionAttributes = $method->getAttributes(Action::class);
+
+      if ($actionAttributes)
+      {
+        $this->availableActions[$method->getShortName()] = $method;
+      }
+    }
+
     $this->workspaceManager = WorkspaceManager::getInstance();
 
     $this->options = new stdClass();
     $this->args = new stdClass();
+  }
+
+  /**
+   * Handles the given action in the provided execution context.
+   * @param string $action The action to be handled.
+   * @param IExecutionContext $context The execution context in which to handle the action.
+   * @return int Returns the exit code of the action.
+   * @throws ReflectionException
+   */
+  public function handle(string $action, IExecutionContext $context): int
+  {
+    if ($actionHandler = $this->getAction($action))
+    {
+      return $actionHandler->invokeArgs($this, [$context]);
+    }
+
+    return Command::ERROR_DEFAULT;
+  }
+
+  /**
+   * @inheritDoc
+   */
+  public function canHandle(string $action): bool
+  {
+    return !empty($this->getAction($action));
   }
 
   /**
@@ -148,6 +199,9 @@ abstract class AbstractCommand implements IExecutable, IComparable
     echo $this->getHeader() . PHP_EOL;
   }
 
+  /**
+   * @return string
+   */
   public function getUsage(): string
   {
     $usage = $this->name;
@@ -216,7 +270,30 @@ abstract class AbstractCommand implements IExecutable, IComparable
       foreach ($this->availableArguments as $argument)
       {
         $name = $argument->alias ? "$argument->name, $argument->alias" : $argument->name;
-        $body .= sprintf("  %-20s %s" . PHP_EOL, $name, $argument->description);
+        $body .= sprintf("  %-20s %s" . PHP_EOL, $name, Text::terminate($argument->description));
+      }
+    }
+
+    if ($this->availableActions)
+    {
+      $body .= PHP_EOL . Color::YELLOW . "Actions: " . Color::RESET . PHP_EOL;
+      foreach ($this->availableActions as $key => $action)
+      {
+        $actionAttributes = $action->getAttributes(Action::class);
+        $name = $key;
+        $description = '';
+
+        foreach ($actionAttributes as $actionAttribute)
+        {
+          /** @var Action $actionAttributeInstance */
+          $actionAttributeInstance = $actionAttribute->newInstance();
+          if ($actionAttributeInstance->alias)
+          {
+            $name .= ", $actionAttributeInstance->alias";
+          }
+          $description = $actionAttributeInstance->description;
+        }
+        $body .= sprintf("  %-20s %s" . PHP_EOL, $name, Text::terminate($description));
       }
     }
 
@@ -235,7 +312,7 @@ abstract class AbstractCommand implements IExecutable, IComparable
               default => $option->defaultValue
             };
         }
-        $body .= sprintf("  %-20s %s" . PHP_EOL, $name, $description);
+        $body .= sprintf("  %-20s %s" . PHP_EOL, $name, Text::terminate($description));
       }
     }
 
@@ -402,6 +479,10 @@ abstract class AbstractCommand implements IExecutable, IComparable
     return $this;
   }
 
+  /**
+   * @param CommandArgument $argument
+   * @return $this
+   */
   public function addArgument(CommandArgument $argument): self
   {
     if (! $this->hasArgument(name: $argument->name, alias: $argument->alias) )
@@ -484,6 +565,9 @@ abstract class AbstractCommand implements IExecutable, IComparable
     return false;
   }
 
+  /**
+   * @return array
+   */
   private function getShortOptionsList(): array
   {
     // NOTE: Could possibly use associative array
@@ -500,6 +584,9 @@ abstract class AbstractCommand implements IExecutable, IComparable
     return $options;
   }
 
+  /**
+   * @return array
+   */
   private function getLongOptionsList(): array
   {
     return array_map(function ($option) {
@@ -507,26 +594,45 @@ abstract class AbstractCommand implements IExecutable, IComparable
     }, $this->availableOptions);
   }
 
+  /**
+   * @param string $token
+   * @return bool
+   */
   private function isShortOption(string $token): bool
   {
     return (bool)preg_match('/^-\w+/', $token);
   }
 
+  /**
+   * @param string $name
+   * @return bool
+   */
   private function isNotShortOption(string $name): bool
   {
     return !$this->isShortOption($name);
   }
 
+  /**
+   * @param string $token
+   * @return bool
+   */
   private function isLongOption(string $token): bool
   {
     return (bool)preg_match('/^--\w+/', $token);
   }
 
+  /**
+   * @param string $name
+   * @return bool
+   */
   private function isNotLongOption(string $name): bool
   {
     return !$this->isLongOption($name);
   }
 
+  /**
+   * @return void
+   */
   private function validateRequiredArguments(): void
   {
     # Collect required arguments
@@ -562,6 +668,9 @@ abstract class AbstractCommand implements IExecutable, IComparable
     }
   }
 
+  /**
+   * @return void
+   */
   private function bindOptions(): void
   {
     foreach ($this->activatedOptions as $option)
@@ -581,5 +690,14 @@ abstract class AbstractCommand implements IExecutable, IComparable
       $name = Text::kebabToCamelCase($argument->name);
       $this->args->$name = $argument->getValue();
     }
+  }
+
+  /**
+   * @param string $name
+   * @return ReflectionMethod|null
+   */
+  protected function getAction(string $name): ?ReflectionMethod
+  {
+    return $this->availableActions[$name] ?? null;
   }
 }

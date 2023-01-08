@@ -21,9 +21,6 @@ class %== __name@pascalize__ ==%Controller
   {
   }
 
-  /**
-   * @throws Exception
-   */
   #[Post]
   public function create(#[Body] Create%== __singular@pascalize__ ==%Dto $create%== __singular@pascalize__ ==%Dto)
   {
