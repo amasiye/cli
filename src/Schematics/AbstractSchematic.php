@@ -65,7 +65,7 @@ abstract class AbstractSchematic implements ISchematic
   {
     if ($bytes = file_put_contents($path, $content))
     {
-      Console::logCreate($path, $bytes);
+      Console::logFileCreate($path, $bytes);
     }
     else
     {
@@ -82,7 +82,7 @@ abstract class AbstractSchematic implements ISchematic
   {
     if ($bytes = file_put_contents($path, $content))
     {
-      Console::logUpdate($path, $bytes);
+      Console::logFileUpdate($path, $bytes);
     }
     else
     {
@@ -99,7 +99,7 @@ abstract class AbstractSchematic implements ISchematic
   {
     if ( rename($path, $to) )
     {
-      Console::logRename(path: $path, to: $to);
+      Console::logFileRename(path: $path, to: $to);
     }
     else
     {
@@ -115,7 +115,7 @@ abstract class AbstractSchematic implements ISchematic
   {
     if (unlink($path))
     {
-      Console::logDelete($path);
+      Console::logFileDelete($path);
     }
     else
     {

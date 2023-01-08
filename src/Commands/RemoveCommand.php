@@ -21,27 +21,29 @@ use ReflectionException;
  *
  */
 #[Command(
-  name: 'add',
-  description: 'Imports a library that has been packaged as an assegai library, running its install schematic.',
+  name: 'remove',
+  description: 'Removes a library that has been packaged as an assegai library, running its uninstall schematic.',
   options: [
     new CommandOption(name: 'dry-run', alias: 'd', description: 'Report actions that would be performed without writing out results.'),
-    new CommandOption(name: 'project', alias: 'p', type: ValueRequirementType::REQUIRED, description: 'Project in which to generate files.', valueType: ValueType::STRING)
+    new CommandOption(name: 'project', alias: 'p', type: ValueRequirementType::REQUIRED, description: 'Project from which to remove files.', valueType: ValueType::STRING)
   ],
   arguments: [
     new CommandArgument(
       name: 'library',
       isRequired: true,
-      description: 'The name of the library to import.',
+      description: 'The name of the library to remove.',
       valueType: ValueType::STRING
     )
   ]
 )]
-class AddCommand extends AbstractCommand
+class RemoveCommand extends AbstractCommand
 {
   private string $composer = 'composer';
   private string $command = '';
 
   /**
+   * Executes the command.
+   *
    * @param IArgumentHost $context
    * @return int
    * @throws WorkspaceException
@@ -56,7 +58,7 @@ class AddCommand extends AbstractCommand
       $package = $this->args->library;
     }
 
-    $this->command = "require $package";
+    $this->command = "remove $package";
 
     if (WorkspaceManager::hasLocalComposer())
     {

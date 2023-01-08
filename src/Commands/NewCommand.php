@@ -9,6 +9,7 @@ use Assegai\Cli\Core\CommandOption;
 use Assegai\Cli\Enumerations\ValueRequirementType;
 use Assegai\Cli\Enumerations\ValueType;
 use Assegai\Cli\Exceptions\FileNotFoundException;
+use Assegai\Cli\Exceptions\InvalidSchemaException;
 use Assegai\Cli\Exceptions\WorkspaceException;
 use Assegai\Cli\Interfaces\IArgumentHost;
 use Assegai\Cli\Interfaces\IExecutionContext;
@@ -34,6 +35,7 @@ class NewCommand extends AbstractCommand
    * @return int
    * @throws FileNotFoundException
    * @throws WorkspaceException
+   * @throws InvalidSchemaException
    */
   public function execute(IArgumentHost|IExecutionContext $context): int
   {

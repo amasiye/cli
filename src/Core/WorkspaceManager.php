@@ -9,7 +9,9 @@ use Assegai\Cli\Core\Menus\MenuItem;
 use Assegai\Cli\Enumerations\Color\Color;
 use Assegai\Cli\Enumerations\Color\TextStyle;
 use Assegai\Cli\Exceptions\FileNotFoundException;
+use Assegai\Cli\Exceptions\InvalidSchemaException;
 use Assegai\Cli\Exceptions\WorkspaceException;
+use Assegai\Cli\Schematics\TemplateEngine;
 use Assegai\Cli\Util\Arrays;
 use Assegai\Cli\Util\Paths;
 use Assegai\Cli\Util\Text;
@@ -37,9 +39,13 @@ final class WorkspaceManager
    * @var string
    */
   private string $projectName = '';
+  /**
+   * @var TemplateEngine|null
+   */
+  private ?TemplateEngine $templateEngine = null;
 
   /**
-   *
+   * Constructs a WorkspaceManager
    */
   private final function __construct()
   {
@@ -59,13 +65,47 @@ final class WorkspaceManager
   }
 
   /**
+   * @return bool
+   */
+  public static function hasLocalComposer(): bool
+  {
+    return file_exists(Paths::join(Paths::getWorkingDirectory(), 'composer.phar'));
+  }
+
+  /**
+   * @return bool
+   */
+  public static function hasGlobalComposer(): bool
+  {
+    return !empty(shell_exec("which composer"));
+  }
+
+  /**
    * @param string $projectName
    * @param object $args
    * @return void
+   * @throws InvalidSchemaException
    * @throws WorkspaceException
+   * @throws FileNotFoundException
    */
   public function init(string $projectName, object $args): void
   {
+    $projectSchemaPath = Paths::join(Paths::getCliSchematicsDirectory(), 'Project', 'schema.php');
+    if (! file_exists($projectSchemaPath) )
+    {
+      $filename = basename($projectSchemaPath);
+      throw new WorkspaceException("Failed to load project $filename.");
+    }
+
+    $projectSchema = require($projectSchemaPath);
+
+    if (!is_array($projectSchema))
+    {
+      throw new InvalidSchemaException("Project schema is not an array.");
+    }
+
+    $this->templateEngine = new TemplateEngine(schema: $projectSchema);
+
     if (! $projectName )
     {
       $projectName = Console::prompt(message: "What name would you like to use for the new project?", defaultValue: "assegai-app");
@@ -113,7 +153,7 @@ final class WorkspaceManager
         "codeception/codeception" => "^4.2"
       ],
       "scripts" => [
-        "start" => "php -S localhost =>5000 assegai-router.php"
+        "start" => "php -S localhost:5000 assegai-router.php"
       ],
       "license" => "MIT",
       "autoload" => [
@@ -126,7 +166,6 @@ final class WorkspaceManager
         "php" => ">=8.1",
         "ext-pdo" => "*",
         "ext-curl" => "*",
-        "assegaiphp/core" => "*",
         "vlucas/phpdotenv" => "^5.4",
       ]
     ];
@@ -144,10 +183,10 @@ final class WorkspaceManager
     }
 
     $assegaiConfigPath = Paths::join($this->projectName, 'assegai.json');
-    $this->writeFile($assegaiConfigPath, $assegaiConfig, false);
+    $this->writeFile($assegaiConfigPath, $assegaiConfig, $this->verbose);
 
     $composerConfigPath = Paths::join($this->projectName, 'composer.json');
-    $this->writeFile($composerConfigPath, $composerConfig, false);
+    $this->writeFile($composerConfigPath, $composerConfig, $this->verbose);
   }
 
   /**
@@ -162,8 +201,11 @@ final class WorkspaceManager
       TextStyle::BLINK->value, Color::LIGHT_BLUE, Color::WHITE, Color::RESET
     );
 
+    $shouldInstallOrm = false;
+
     if (Console::confirm(message: 'Would you like to connect to a database?'))
     {
+      $shouldInstallOrm = true;
       $databaseMenu = new Menu(title: '');
       $databaseTypes = $this->getDatabaseTypes(path: Paths::join($this->projectPath, 'config/default.php'));
       foreach ($databaseTypes as $type)
@@ -227,7 +269,11 @@ final class WorkspaceManager
       }
     }
 
-    $installCommand = "cd $this->projectPath && composer update";
+    $installCommand = "cd $this->projectPath && composer --ansi require assegaiphp/core";
+    if ($shouldInstallOrm)
+    {
+      $installCommand .= " && composer --ansi require assegaiphp/orm";
+    }
 
     $dependencyInstallationResult = system(command: $installCommand);
 
@@ -285,7 +331,9 @@ final class WorkspaceManager
   {
     $isUpdate = file_exists($filename);
     $workingDirectory = Paths::getWorkingDirectory();
-    $path = Paths::join($workingDirectory, $filename);
+    $path = str_starts_with($filename, $workingDirectory)
+      ? $filename
+      : Paths::join($workingDirectory, $filename);
 
     $result = file_put_contents($path, $data);
 
@@ -295,11 +343,11 @@ final class WorkspaceManager
       {
         if ($isUpdate)
         {
-          Console::logUpdate(path: $filename, filesize: $result);
+          Console::logFileUpdate(path: $filename, newFileSize: $result);
         }
         else
         {
-          Console::logCreate(path: $filename, filesize: $result);
+          Console::logFileCreate(path: $filename, newFileSize: $result);
         }
       }
 
@@ -333,7 +381,7 @@ final class WorkspaceManager
 
     if ($verbose)
     {
-      Console::logCreate($path);
+      Console::logFileCreate($path);
     }
 
     return $path;

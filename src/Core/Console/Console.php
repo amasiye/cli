@@ -91,7 +91,7 @@ final class Console
    */
   public static function error(mixed $obj, bool $exit = false): void
   {
-    self::log(message: sprintf("%sError: %s%s", Color::RED, self::objectToString($obj), Color::RESET), exit: $exit);
+    self::log(message: sprintf("%sError: %s%s", Color::LIGHT_RED, self::objectToString($obj), Color::RESET), exit: $exit);
   }
 
   /**
@@ -258,22 +258,22 @@ final class Console
 
   /**
    * @param string $path
-   * @param int|null $filesize
+   * @param int|null $newFileSize
    * @return void
    */
-  public static function logCreate(string $path, ?int $filesize = null): void
+  public static function logFileCreate(string $path, ?int $newFileSize = null): void
   {
-    self::logFileAction(path: $path, filesize: $filesize);
+    self::logFileAction(path: $path, newFileSize: $newFileSize);
   }
 
   /**
    * @param string $path
-   * @param int|null $filesize
+   * @param int|null $newFileSize
    * @return void
    */
-  public static function logUpdate(string $path, ?int $filesize = null): void
+  public static function logFileUpdate(string $path, ?int $newFileSize = null): void
   {
-    self::logFileAction(action: self::FILE_UPDATE, path: $path, filesize: $filesize);
+    self::logFileAction(action: self::FILE_UPDATE, path: $path, newFileSize: $newFileSize);
   }
 
   /**
@@ -281,7 +281,7 @@ final class Console
    * @param string $to
    * @return void
    */
-  public static function logRename(string $path, string $to): void
+  public static function logFileRename(string $path, string $to): void
   {
     self::logFileAction(action: self::FILE_RENAME, path: sprintf("%s → %s", $path, $to));
   }
@@ -290,7 +290,7 @@ final class Console
    * @param string $path
    * @return void
    */
-  public static function logDelete(string $path): void
+  public static function logFileDelete(string $path): void
   {
     self::logFileAction(action: self::FILE_DELETE, path: $path);
   }
@@ -298,10 +298,10 @@ final class Console
   /**
    * @param string $action
    * @param string $path
-   * @param int|null $filesize
+   * @param int|null $newFileSize
    * @return void
    */
-  private static function logFileAction(string $action = self::FILE_CREATE, string $path = '', ?int $filesize = null): void
+  private static function logFileAction(string $action = self::FILE_CREATE, string $path = '', ?int $newFileSize = null): void
   {
     $colorCode = match($action) {
       self::FILE_CREATE => Color::GREEN,
@@ -311,8 +311,8 @@ final class Console
       default             => Color::YELLOW
     };
 
-    $bytes = Number::formatBytes(bytes: $filesize);
-    $suffix = is_null($filesize) ? '' : " ($bytes)";
+    $bytes = Number::formatBytes(bytes: $newFileSize);
+    $suffix = is_null($newFileSize) ? '' : " ($bytes)";
 
     printf("%s%s%s %s%s\n", $colorCode, $action, Color::RESET, $path, $suffix);
   }
