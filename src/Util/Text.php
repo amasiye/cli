@@ -500,12 +500,17 @@ class Text
 
   /**
    * Adds terminal punctuation to given text.
-   * @param string $text
+   * @param string|null $text
    * @param string $punctuation
    * @return string
    */
-  public static function terminate(string $text, string $punctuation = '.'): string
+  public static function terminate(string|null $text, string $punctuation = '.'): string
   {
+    if (is_null($text))
+    {
+      return '';
+    }
+
     if (!in_array($punctuation, ['.', '!', '?']))
     {
       $punctuation = '.';
