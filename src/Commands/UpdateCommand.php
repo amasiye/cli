@@ -13,7 +13,7 @@ use Assegai\Cli\Interfaces\IArgumentHost;
   name: 'update',
   usage: 'update [options]',
   shortName: 'u',
-  description: 'Updates your application and its dependencies. See https://update.assegai.ml/'
+  description: 'Updates your application and its dependencies. See https://update.assegaiphp.com/'
 )]
 class UpdateCommand extends AbstractCommand
 {
