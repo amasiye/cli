@@ -38,4 +38,25 @@ enum SchematicType: string implements IValuable
 
     return $values;
   }
+
+  public static function getDescription(SchematicType $type): string
+  {
+    return match ($type) {
+      self::APPLICATION => 'Generate a new application workspace',
+      self::ATTRIBUTE => 'Generate a custom attribute',
+      self::CUSTOM_CLASS => 'Generate a new class',
+      self::CONFIG => 'Generate a CLI configuration file',
+      self::CONTROLLER => 'Generate a controller declaration',
+      self::FILTER => 'Generate a filter declaration',
+      self::GUARD => 'Generate a guard declaration',
+      self::INTERCEPTOR => 'Generate an interceptor declaration',
+      self::INTERFACE => 'Generate an interface',
+      self::MIDDLEWARE => 'Generate a middleware declaration',
+      self::MODULE => 'Generate a module declaration',
+      self::PIPE => 'Generate a pipe declaration',
+      self::SERVICE => 'Generate a service declaration',
+      self::RESOURCE => 'Generate a new CRUD resource',
+      default => ''
+    };
+  }
 }

@@ -10,9 +10,9 @@
 
 ## Description
 
-The Assegai CLI is a command-line interface tool that helps you to initialize, develop and maintain your Assegai applications. It assists in multiple ways, including scaffolding the project, serving it in development mode and building the application for production. It embodies best-practice architectural patterns to encourage well-structured apps.
+The AssegaiPHP command-line interface is a tool that makes it easy to create, develop, and maintain Assegai applications. It provides various features, such as creating a new project, running the application in development mode, and building and packaging it for production deployment.
 
-The CLI works with [schematics][schematics] and provides built in support from the schematics' collection at [@assegaiphp/schematics](https://github.com/assegai-php/schematics)
+The AssegaiPHP CLI includes built-in support for the collection of [schematics] available at @assegaiphp/schematics, allowing for easy initialization, development, and maintenance of AssegaiPHP applications through scaffolding, development mode serving, and production distribution building and bundling.
 
 ## Installation
 ### Windows

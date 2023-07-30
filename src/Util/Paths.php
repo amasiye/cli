@@ -35,6 +35,7 @@ final class Paths
    */
   public static function getCliBaseDirectory(): string
   {
+    # Attempt to get the global assegai path
     return dirname(__DIR__, 2);
   }
 
@@ -87,6 +88,21 @@ final class Paths
     }
 
     $path = preg_replace('/\/+/', '/', $path);
+
+    if (str_contains($path, 'assegai.phar') && str_starts_with($path, '/phar:'))
+    {
+      $path = ltrim($path, '/');
+
+      if (!preg_match('/phar:\/\/\//', $path))
+      {
+        $path = match(true) {
+          str_contains('phar:/', 'phar:///') => str_replace('phar:/', 'phar:///', $path),
+          str_contains('phar://', $path) => str_replace('phar://', 'phar:///', $path),
+          default => str_replace('phar:', 'phar://', $path)
+        };
+      }
+    }
+
     return rtrim($path, '/');
   }
 

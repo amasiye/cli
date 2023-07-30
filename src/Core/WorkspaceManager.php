@@ -15,6 +15,7 @@ use Assegai\Cli\Schematics\TemplateEngine;
 use Assegai\Cli\Util\Arrays;
 use Assegai\Cli\Util\Paths;
 use Assegai\Cli\Util\Text;
+use Phar;
 
 /**
  *
@@ -81,16 +82,18 @@ final class WorkspaceManager
   }
 
   /**
-   * @param string $projectName
-   * @param object $args
+   * Initializes the project workspace.
+   *
+   * @param string $projectName The name of the project.
+   * @param object $args The arguments passed to the command.
    * @return void
-   * @throws InvalidSchemaException
-   * @throws WorkspaceException
-   * @throws FileNotFoundException
+   * @throws InvalidSchemaException If the project schema is invalid.
+   * @throws WorkspaceException If the project could not be initialized.
+   * @throws FileNotFoundException If the project schema could not be found.
    */
   public function init(string $projectName, object $args): void
   {
-    $projectSchemaPath = Paths::join(Paths::getCliSchematicsDirectory(), 'Project', 'schema.php');
+    $projectSchemaPath = Paths::join(dirname(__DIR__), 'Schematics', 'Project', 'schema.php');
     if (! file_exists($projectSchemaPath) )
     {
       $filename = basename($projectSchemaPath);
@@ -108,7 +111,10 @@ final class WorkspaceManager
 
     if (! $projectName )
     {
-      $projectName = Console::prompt(message: "What name would you like to use for the new project?", defaultValue: "assegai-app");
+      $projectName = Console::prompt(
+        message: "What name would you like to use for the new project?",
+        defaultValue: "assegai-app"
+      );
     }
 
     $this->projectName = Text::dasherize($projectName);
@@ -175,11 +181,35 @@ final class WorkspaceManager
 
     # Copy template files over to working project path
     $templatePath = Paths::join(Paths::getCliSchematicsDirectory(), 'Project/Files');
-    $copyCommand = "cp -r -T $templatePath $this->projectPath";
 
-    if (false === exec($copyCommand) )
+    $cliFilename = Paths::getCliBaseDirectory();
+    if (str_ends_with($cliFilename, 'assegai.phar'))
     {
-      throw new WorkspaceException("Failed to copy template files");
+      // Extract phar
+      if (!$this->copyFilesFromPhar($cliFilename, 'src/Project/Files', $this->projectPath))
+      {
+        throw new WorkspaceException("Failed to copy template files");
+      }
+
+//      $relativeTemplatePath = preg_replace('/phar:\/\/.*assegai\.phar\//', '', $templatePath);
+//      $templateFiles = scandir($templatePath);
+//
+//      $files = array_map(fn($file) => ltrim(Paths::join($relativeTemplatePath, $file), DIRECTORY_SEPARATOR), $templateFiles);
+
+//      $phar = new Phar($cliFilename);
+//      if (!$phar->extractTo($this->projectPath, $files))
+//      {
+//      }
+    }
+    else
+    {
+      // Do normal copy
+      $copyCommand = "cp -r -T $templatePath $this->projectPath";
+
+      if (false === exec($copyCommand) )
+      {
+        throw new WorkspaceException("Failed to copy template files");
+      }
     }
 
     $assegaiConfigPath = Paths::join($this->projectName, 'assegai.json');
@@ -190,9 +220,11 @@ final class WorkspaceManager
   }
 
   /**
+   * Installs the project dependencies.
+   *
    * @return void
-   * @throws FileNotFoundException
-   * @throws WorkspaceException
+   * @throws FileNotFoundException If the composer.json file could not be found.
+   * @throws WorkspaceException If the project dependencies could not be installed.
    */
   public function install(): void
   {
@@ -238,8 +270,8 @@ final class WorkspaceManager
         'databases' => [
           $databaseType->value() => [
             $databaseName => [
-              'host' => $databaseHost ?? 'localhost',
-              'user' => $databaseUser ?? 'root',
+              'host' => $databaseHost,
+              'user' => $databaseUser,
               'password' => $databasePassword,
               'port' => $databasePort ?? 3306,
             ]
@@ -407,5 +439,40 @@ final class WorkspaceManager
     }
 
     return [];
+  }
+
+  /**
+   * @param $pharFile
+   * @param $srcPath
+   * @param $dstPath
+   * @return bool
+   * @throws WorkspaceException
+   */
+  function copyFilesFromPhar($pharFile, $srcPath, $dstPath): bool
+  {
+    // open the .phar file
+    $phar = new Phar($pharFile);
+    // check if the source path exists within the .phar file
+    error_log('LOG: ' . $phar->offsetGet($srcPath));
+    if (!$phar->offsetExists($srcPath))
+    {
+      throw new WorkspaceException("The source path ($srcPath) does not exist within the .phar file.");
+    }
+    // iterate through the files in the source path
+    $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($phar[$srcPath]));
+    foreach($iterator as $file)
+    {
+      // construct the destination file path
+      $dstFile = $dstPath . DIRECTORY_SEPARATOR . $iterator->getSubPathName();
+      // create the directory structure if it doesn't exist
+      if (!is_dir(dirname($dstFile)))
+      {
+        mkdir(dirname($dstFile), 0777, true);
+      }
+      // copy the file
+      copy($file, $dstFile);
+    }
+
+    return true;
   }
 }

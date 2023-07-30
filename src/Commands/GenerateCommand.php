@@ -8,6 +8,7 @@ use Assegai\Cli\Core\AbstractCommand;
 use Assegai\Cli\Core\CommandArgument;
 use Assegai\Cli\Core\CommandOption;
 use Assegai\Cli\Core\Console\Console;
+use Assegai\Cli\Enumerations\Color\Color;
 use Assegai\Cli\Enumerations\SchematicType;
 use Assegai\Cli\Enumerations\ValueRequirementType;
 use Assegai\Cli\Enumerations\ValueType;
@@ -129,5 +130,21 @@ class GenerateCommand extends AbstractCommand
     $this->schematicEngine->build(templatePath: $templateFilePath, outputPath: $rootOutputPath);
 
     return Command::SUCCESS;
+  }
+
+  public function getHelp(): string
+  {
+    $output = parent::getHelp();
+
+    $output .= sprintf("%s\nAvailable Schematics:%s" . PHP_EOL, Color::YELLOW, Color::RESET);
+
+    $schematics = SchematicType::cases();
+
+    foreach ($schematics as $schematic)
+    {
+      $output .= sprintf("  %-20s %s\n", $schematic->value, SchematicType::getDescription($schematic));
+    }
+
+    return $output;
   }
 }

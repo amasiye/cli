@@ -8,6 +8,7 @@ use Assegai\Cli\Exceptions\ConsoleException;
 use Assegai\Cli\Exceptions\InsufficientDetailsException;
 use Assegai\Cli\Exceptions\NotFoundException;
 use Assegai\Cli\Interfaces\IExecutable;
+use Assegai\Cli\Util\Logger\Log;
 use ReflectionClass;
 use ReflectionException;
 
@@ -95,8 +96,13 @@ final class App
       {
         $commandName = 'help';
       }
+
       /** @var AbstractCommand $command */
-      $command = $this->commands[$commandName] ?? $this->commands[$this->shortNames[$commandName]] ?? $this->commands['help'];
+      $command = match(true) {
+        isset($this->commands[$commandName]) => $this->commands[$commandName],
+        isset($this->shortNames[$commandName]) => $this->commands[$this->shortNames[$commandName]],
+        default => $this->commands['help']
+      };
       $command->configure();
       if ($secondArg = $this->context->getArgsById(0))
       {

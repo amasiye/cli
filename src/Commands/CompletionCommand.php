@@ -14,7 +14,7 @@ use Exception;
 #[Command(
   name: 'completion',
   usage: 'assegai completion [argument]',
-  description: 'Set up Angular CLI autocompletion for your terminal.',
+  description: 'Set up Assegai CLI autocompletion for your terminal.',
 )]
 class CompletionCommand extends AbstractCommand
 {
