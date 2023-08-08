@@ -18,7 +18,10 @@
     "autoload": {
         "psr-4": {
             "Assegai\\Cli\\": "src/"
-        }
+        },
+        "files": [
+            "src/Util/Functions.php"
+        ]
     },
     "authors": [
         {
