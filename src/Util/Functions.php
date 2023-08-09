@@ -20,6 +20,17 @@ function is_phar(string $filename): bool
   return true;
 }
 
+/**
+ * Checks if the given path is a phar path. This is a path that starts with 'phar://'.
+ *
+ * @param string $path The path to check.
+ * @return bool Returns true if the path is a phar path.
+ */
+function is_phar_path(string $path): bool
+{
+  return str_starts_with($path, 'phar://');
+}
+
 /* === File System Functions === */
 /**
  *
