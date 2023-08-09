@@ -39,7 +39,7 @@ class NewCommand extends AbstractCommand
    */
   public function execute(IArgumentHost|IExecutionContext $context): int
   {
-    $this->workspaceManager->init(projectName: $this->args->name ?? '', args: $this->args);
+    $this->workspaceManager->init(projectName: $this->args->name ?? '');
     $this->workspaceManager->install();
 
     return Command::SUCCESS;

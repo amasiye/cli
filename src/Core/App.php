@@ -8,7 +8,6 @@ use Assegai\Cli\Exceptions\ConsoleException;
 use Assegai\Cli\Exceptions\InsufficientDetailsException;
 use Assegai\Cli\Exceptions\NotFoundException;
 use Assegai\Cli\Interfaces\IExecutable;
-use Assegai\Cli\Util\Logger\Log;
 use ReflectionClass;
 use ReflectionException;
 
