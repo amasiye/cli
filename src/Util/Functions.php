@@ -19,3 +19,39 @@ function is_phar(string $filename): bool
 
   return true;
 }
+
+/* === File System Functions === */
+/**
+ *
+ *
+ * @param string $directoryPath
+ * @return bool
+ */
+function delete_directory(string $directoryPath): bool
+{
+  if (! is_dir($directoryPath) )
+  {
+    return false;
+  }
+
+  $files = scandir($directoryPath);
+
+  foreach ($files as $file)
+  {
+    if ($file === '.' || $file === '..')
+    {
+      continue;
+    }
+
+    if (is_dir("$directoryPath/$file"))
+    {
+      delete_directory("$directoryPath/$file");
+    }
+    else
+    {
+      unlink("$directoryPath/$file");
+    }
+  }
+
+  return rmdir($directoryPath);
+}
