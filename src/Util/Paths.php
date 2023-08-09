@@ -2,6 +2,8 @@
 
 namespace Assegai\Cli\Util;
 
+use Exception;
+
 /**
  * Defines static methods for managing some useful paths.
  */
@@ -15,7 +17,9 @@ final class Paths
   }
 
   /**
-   * @return string
+   * Returns the current working directory.
+   *
+   * @return string The current working directory.
    */
   public static function getWorkingDirectory(): string
   {
@@ -23,15 +27,30 @@ final class Paths
   }
 
   /**
-   * @return string
+   * Returns the path to the global assegai directory.
+   *
+   * @return string The path to the global assegai directory.
+   * @throws Exception If the global assegai directory cannot be found.
    */
   public static function getAssegaiPath(): string
   {
-    return trim(shell_exec('echo $ASSEGAI_PATH'));
+    $path = match(true) {
+      PHP_OS_FAMILY === 'Windows' => exec("where assegai"),
+      default => exec("which assegai")
+    };
+
+    if (empty($path))
+    {
+      throw new Exception("Could not find assegai executable.");
+    }
+
+    return $path;
   }
 
   /**
-   * @return string
+   * Returns the path to the global assegai directory.
+   *
+   * @return string The path to the global assegai directory.
    */
   public static function getCliBaseDirectory(): string
   {
@@ -40,7 +59,9 @@ final class Paths
   }
 
   /**
-   * @return string
+   * Returns the path to the resource directory.
+   *
+   * @return string The path to the resource directory.
    */
   public static function getResourceDirectory(): string
   {
@@ -48,7 +69,9 @@ final class Paths
   }
 
   /**
-   * @return string
+   * Returns the path to the assegai.json config file.
+   *
+   * @return string The path to the assegai.json config file.
    */
   public static function getAssegaiJsonConfigPath(): string
   {
@@ -56,7 +79,9 @@ final class Paths
   }
 
   /**
-   * @return string
+   * Returns the path to the config directory.
+   *
+   * @return string The path to the config directory.
    */
   public static function getConfigDirectory(): string
   {
@@ -64,7 +89,9 @@ final class Paths
   }
 
   /**
-   * @return string
+   * Returns the path to the CLI Schematics directory.
+   *
+   * @return string The path to the CLI Schematics directory.
    */
   public static function getCliSchematicsDirectory(): string
   {
@@ -72,43 +99,41 @@ final class Paths
   }
 
   /**
-   * @param ...$paths
-   * @return string
+   * Joins the given paths together.
+   *
+   * @param string ...$paths The paths to join.
+   * @return string The joined path.
    */
-  public static function join(...$paths): string
+  public static function join(string ...$paths): string
   {
     $path = '';
 
-    foreach ($paths as $p)
+    foreach ($paths as $index => $p)
     {
+      if ($index === 0 && str_starts_with($p, '/'))
+      {
+        $path = ltrim($path, '/');
+      }
+
       if (is_string($p))
       {
-        $path .= "/$p";
+        $path .= "$p/";
       }
     }
 
-    $path = preg_replace('/\/+/', '/', $path);
-
-    if (str_contains($path, 'assegai.phar') && str_starts_with($path, '/phar:'))
+    if (str_starts_with($path, '/phar:'))
     {
       $path = ltrim($path, '/');
-
-      if (!preg_match('/phar:\/\/\//', $path))
-      {
-        $path = match(true) {
-          str_contains('phar:/', 'phar:///') => str_replace('phar:/', 'phar:///', $path),
-          str_contains('phar://', $path) => str_replace('phar://', 'phar:///', $path),
-          default => str_replace('phar:', 'phar://', $path)
-        };
-      }
     }
 
     return rtrim($path, '/');
   }
 
   /**
-   * @param string $path
-   * @return string
+   * Transforms the given path into a pascal case string.
+   *
+   * @param string $path The path to transform.
+   * @return string The pascal case string.
    */
   public static function pascalize(string $path): string
   {
