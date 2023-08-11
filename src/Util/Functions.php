@@ -33,7 +33,58 @@ function is_phar_path(string $path): bool
 
 /* === File System Functions === */
 /**
+ * Returns the path to the temporary directory.
  *
+ * @return string The path to the temporary directory.
+ */
+function get_temp_dir(): string
+{
+  return '~/.assegai/tmp';
+}
+
+/**
+ * Copies the given directory to the given target.
+ *
+ * @param string $source The source directory to copy.
+ * @param string $target The target directory to copy to.
+ * @return void
+ * @throws RuntimeException Thrown if the directory could not be copied.
+ */
+function copy_directory(string $source, string $target): void
+{
+  if (! is_dir($target) )
+  {
+    if (false === mkdir($target))
+    {
+      throw new RuntimeException("Failed to create directory, $target");
+    }
+  }
+
+  $files = scandir($source);
+
+  foreach ($files as $file)
+  {
+    if ($file === '.' || $file === '..')
+    {
+      continue;
+    }
+
+    $sourcePath = "$source/$file";
+    $targetPath = "$target/$file";
+
+    if (is_dir($sourcePath))
+    {
+      copy_directory($sourcePath, $targetPath);
+    }
+    else
+    {
+      copy($sourcePath, $targetPath);
+    }
+  }
+}
+
+/**
+ * Deletes the given directory.
  *
  * @param string $directoryPath
  * @return bool
