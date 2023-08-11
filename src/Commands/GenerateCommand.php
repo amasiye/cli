@@ -7,7 +7,6 @@ use Assegai\Cli\Attributes\ValidateWorkspace;
 use Assegai\Cli\Core\AbstractCommand;
 use Assegai\Cli\Core\CommandArgument;
 use Assegai\Cli\Core\CommandOption;
-use Assegai\Cli\Core\Console\Console;
 use Assegai\Cli\Enumerations\Color\Color;
 use Assegai\Cli\Enumerations\SchematicType;
 use Assegai\Cli\Enumerations\ValueRequirementType;
@@ -20,12 +19,10 @@ use Assegai\Cli\Exceptions\SchematicException;
 use Assegai\Cli\Interfaces\IArgumentHost;
 use Assegai\Cli\Interfaces\IExecutionContext;
 use Assegai\Cli\Schematics\AbstractSchematic;
-use Assegai\Cli\Schematics\Module\ModuleSchematic;
 use Assegai\Cli\Schematics\SchematicEngine;
 use Assegai\Cli\Schematics\SchematicEngineHost;
 use Assegai\Cli\Util\Text;
 use Assegai\Cli\Util\Paths;
-use stdClass;
 
 #[Command(
   name: 'generate',
@@ -46,6 +43,11 @@ class GenerateCommand extends AbstractCommand
 {
   private ?SchematicEngine $schematicEngine = null;
 
+  /**
+   * Configure the command.
+   *
+   * @return void
+   */
   public function configure(): void
   {
     parent::configure();

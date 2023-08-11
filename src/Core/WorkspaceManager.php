@@ -13,15 +13,20 @@ use Assegai\Cli\Exceptions\InvalidSchemaException;
 use Assegai\Cli\Exceptions\WorkspaceException;
 use Assegai\Cli\Schematics\TemplateEngine;
 use Assegai\Cli\Util\Arrays;
+use Assegai\Cli\Util\Directory;
+use Assegai\Cli\Util\Logger\Log;
 use Assegai\Cli\Util\Paths;
 use Assegai\Cli\Util\Text;
+use Exception;
 use Phar;
 
 /**
- *
+ * Class WorkspaceManager. Manages the workspace.
  */
 final class WorkspaceManager
 {
+  const LOG_TAG = '[WorkspaceManager]';
+  const ERROR_TAG = '[WorkspaceManager Error]';
   /**
    * @var WorkspaceManager|null
    */
@@ -43,13 +48,18 @@ final class WorkspaceManager
   /**
    * @var TemplateEngine|null
    */
-  private ?TemplateEngine $templateEngine = null;
+  protected ?TemplateEngine $templateEngine = null;
+  /**
+   * @var Log $logger The logger.
+   */
+  protected Log $logger;
 
   /**
    * Constructs a WorkspaceManager
    */
   private final function __construct()
   {
+    $this->logger = Log::getInstance();
   }
 
   /**
@@ -85,15 +95,15 @@ final class WorkspaceManager
    * Initializes the project workspace.
    *
    * @param string $projectName The name of the project.
-   * @param object $args The arguments passed to the command.
    * @return void
    * @throws InvalidSchemaException If the project schema is invalid.
    * @throws WorkspaceException If the project could not be initialized.
    * @throws FileNotFoundException If the project schema could not be found.
    */
-  public function init(string $projectName, object $args): void
+  public function init(string $projectName): void
   {
-    $projectSchemaPath = Paths::join(dirname(__DIR__), 'Schematics', 'Project', 'schema.php');
+    $projectSchemaPath = Paths::join(Paths::getCliSchematicsDirectory(), 'Project', 'schema.php');
+
     if (! file_exists($projectSchemaPath) )
     {
       $filename = basename($projectSchemaPath);
@@ -155,11 +165,8 @@ final class WorkspaceManager
       "name" => 'assegaiphp/' . Text::snakerize($this->projectName),
       "description" => $description,
       "type" => $projectType,
-      "require-dev" => [
-        "codeception/codeception" => "^4.2"
-      ],
       "scripts" => [
-        "start" => "php -S localhost:5000 assegai-router.php"
+        "start" => "php -S localhost:5000 assegai-router.php",
       ],
       "license" => "MIT",
       "autoload" => [
@@ -183,29 +190,18 @@ final class WorkspaceManager
     $templatePath = Paths::join(Paths::getCliSchematicsDirectory(), 'Project/Files');
 
     $cliFilename = Paths::getCliBaseDirectory();
-    if (str_ends_with($cliFilename, 'assegai.phar'))
+    if (is_phar($cliFilename))
     {
       // Extract phar
-      if (!$this->copyFilesFromPhar($cliFilename, 'src/Project/Files', $this->projectPath))
+      if (!$this->copyFilesFromPhar($cliFilename, 'src/Schematics/Project/Files', $this->projectPath))
       {
         throw new WorkspaceException("Failed to copy template files");
       }
-
-//      $relativeTemplatePath = preg_replace('/phar:\/\/.*assegai\.phar\//', '', $templatePath);
-//      $templateFiles = scandir($templatePath);
-//
-//      $files = array_map(fn($file) => ltrim(Paths::join($relativeTemplatePath, $file), DIRECTORY_SEPARATOR), $templateFiles);
-
-//      $phar = new Phar($cliFilename);
-//      if (!$phar->extractTo($this->projectPath, $files))
-//      {
-//      }
     }
     else
     {
       // Do normal copy
       $copyCommand = "cp -r -T $templatePath $this->projectPath";
-
       if (false === exec($copyCommand) )
       {
         throw new WorkspaceException("Failed to copy template files");
@@ -233,9 +229,15 @@ final class WorkspaceManager
       TextStyle::BLINK->value, Color::LIGHT_BLUE, Color::WHITE, Color::RESET
     );
 
-    $shouldInstallOrm = false;
+    $shouldInstallOrm = Console::confirm(message: 'Would you like to connect to a database?');
 
-    if (Console::confirm(message: 'Would you like to connect to a database?'))
+    if ($shouldInstallOrm && ! $this->meetsOrmRequirements() )
+    {
+      Console::error('You must install the PDO extension to connect to a database.');
+      $shouldInstallOrm = false;
+    }
+
+    if ($shouldInstallOrm)
     {
       $shouldInstallOrm = true;
       $databaseMenu = new Menu(title: '');
@@ -262,7 +264,7 @@ final class WorkspaceManager
       $databaseName = Console::prompt(message: 'What is the database name?', defaultValue: $defaultDatabaseName);
       $databaseHost = Console::prompt(message: 'Host', defaultValue: 'localhost');
       $databaseUser = Console::prompt(message: 'User', defaultValue: 'root');
-      $databasePassword = Console::promptPassword('Password');
+      $databasePassword = Console::promptPassword();
       $databasePort = Console::prompt(message: 'Port', defaultValue: $defaultDatabasePort);
       $databasePort = filter_var($databasePort, FILTER_VALIDATE_INT);
 
@@ -442,35 +444,110 @@ final class WorkspaceManager
   }
 
   /**
-   * @param $pharFile
-   * @param $srcPath
-   * @param $dstPath
-   * @return bool
-   * @throws WorkspaceException
+   * Copy files from a .phar file to a destination directory.
+   *
+   * @param string $pharPath The path to the .phar file.
+   * @param string $sourceDirectory The directory within the .phar file to copy files from.
+   * @param string $destinationDirectory The directory to copy files to.
+   *
+   * @return bool True if the files were copied successfully, false otherwise.
+   * @throws WorkspaceException If the source directory does not exist within the .phar file.
    */
-  function copyFilesFromPhar($pharFile, $srcPath, $dstPath): bool
+  function copyFilesFromPhar(string $pharPath, string $sourceDirectory, string $destinationDirectory): bool
   {
-    // open the .phar file
-    $phar = new Phar($pharFile);
-    // check if the source path exists within the .phar file
-    error_log('LOG: ' . $phar->offsetGet($srcPath));
-    if (!$phar->offsetExists($srcPath))
+    # Create a temporary directory.
+    $this->logger->log(WorkspaceManager::LOG_TAG,'Creating temporary directory');
+    $temporaryDirectory = Paths::join(sys_get_temp_dir(), 'assegai');
+
+    if (false === Directory::create($temporaryDirectory))
     {
-      throw new WorkspaceException("The source path ($srcPath) does not exist within the .phar file.");
+      throw new WorkspaceException('Failed to create temporary directory');
     }
-    // iterate through the files in the source path
-    $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($phar[$srcPath]));
-    foreach($iterator as $file)
+
+    try
     {
-      // construct the destination file path
-      $dstFile = $dstPath . DIRECTORY_SEPARATOR . $iterator->getSubPathName();
-      // create the directory structure if it doesn't exist
-      if (!is_dir(dirname($dstFile)))
+      # Extract the contents of the phar to a temporary directory.
+      $phar = new Phar($pharPath);
+      $phar->extractTo($temporaryDirectory);
+
+      # Copy the files from the temporary directory to the destination directory.
+      $sourceDirectoryPath = Paths::join($temporaryDirectory, $sourceDirectory);
+
+      if (Directory::doesNotExist($sourceDirectoryPath))
       {
-        mkdir(dirname($dstFile), 0777, true);
+        throw new WorkspaceException("Source directory ($sourceDirectoryPath) does not exist.");
       }
-      // copy the file
-      copy($file, $dstFile);
+
+      $this->logger->log(WorkspaceManager::LOG_TAG,'Copying files from temporary directory to destination directory');
+      if (false === `cp -r $sourceDirectoryPath/* $destinationDirectory`)
+      {
+        throw new WorkspaceException('Failed to copy files from temporary directory to destination directory');
+      }
+    }
+    catch (Exception $exception)
+    {
+      $this->logger->error(self::ERROR_TAG, $exception->getMessage());
+      throw new WorkspaceException($exception);
+    }
+
+    # Delete the temporary directory.
+    if (false === Directory::delete($temporaryDirectory))
+    {
+      throw new WorkspaceException('Failed to delete temporary directory');
+    }
+
+    return true;
+  }
+
+  /**
+   * Check if the system meets the requirements for the ORM.
+   *
+   * @return bool
+   */
+  private function meetsOrmRequirements(): bool
+  {
+    printf("\n%sChecking for assegaiphp/orm requirements...%s", Color::LIGHT_BLUE, Color::RESET);
+
+    # Check system for ext-pdo
+    if (false === extension_loaded('pdo'))
+    {
+      Console::error('The ext-pdo extension is required.');
+      return false;
+    }
+
+    # Check system for ext-curl
+    if (false === extension_loaded('curl'))
+    {
+      Console::error('The ext-curl extension is required.');
+      return false;
+    }
+
+    # Check system for ext-intl
+    if (false === extension_loaded('intl'))
+    {
+      Console::error('The ext-intl extension is required.');
+      return false;
+    }
+
+    # Check system for ext-pdo_mysql
+    if (false === extension_loaded('pdo_mysql'))
+    {
+      Console::error('The ext-pdo_mysql extension is required.');
+      return false;
+    }
+
+    # Check system for ext-pdo_pgsql
+    if (false === extension_loaded('pdo_pgsql'))
+    {
+      Console::error('The ext-pdo_pgsql extension is required.');
+      return false;
+    }
+
+    # Check system for ext-pdo_sqlite
+    if (false === extension_loaded('pdo_sqlite'))
+    {
+      Console::error('The ext-pdo_sqlite extension is required.');
+      return false;
     }
 
     return true;
