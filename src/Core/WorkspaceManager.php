@@ -13,6 +13,7 @@ use Assegai\Cli\Exceptions\InvalidSchemaException;
 use Assegai\Cli\Exceptions\WorkspaceException;
 use Assegai\Cli\Schematics\TemplateEngine;
 use Assegai\Cli\Util\Arrays;
+use Assegai\Cli\Util\Directory;
 use Assegai\Cli\Util\Logger\Log;
 use Assegai\Cli\Util\Paths;
 use Assegai\Cli\Util\Text;
@@ -20,7 +21,7 @@ use Exception;
 use Phar;
 
 /**
- *
+ * Class WorkspaceManager. Manages the workspace.
  */
 final class WorkspaceManager
 {
@@ -458,7 +459,7 @@ final class WorkspaceManager
     $this->logger->log(WorkspaceManager::LOG_TAG,'Creating temporary directory');
     $temporaryDirectory = Paths::join(sys_get_temp_dir(), 'assegai');
 
-    if (false === mkdir($temporaryDirectory))
+    if (false === Directory::create($temporaryDirectory))
     {
       throw new WorkspaceException('Failed to create temporary directory');
     }
@@ -472,7 +473,7 @@ final class WorkspaceManager
       # Copy the files from the temporary directory to the destination directory.
       $sourceDirectoryPath = Paths::join($temporaryDirectory, $sourceDirectory);
 
-      if (false === file_exists($sourceDirectoryPath))
+      if (Directory::doesNotExist($sourceDirectoryPath))
       {
         throw new WorkspaceException("Source directory ($sourceDirectoryPath) does not exist.");
       }
@@ -490,7 +491,7 @@ final class WorkspaceManager
     }
 
     # Delete the temporary directory.
-    if (false === delete_directory($temporaryDirectory))
+    if (false === Directory::delete($temporaryDirectory))
     {
       throw new WorkspaceException('Failed to delete temporary directory');
     }

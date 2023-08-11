@@ -3,12 +3,15 @@
 namespace Assegai\Cli\Schematics;
 
 use Assegai\Cli\Core\Console\Console;
+use Assegai\Cli\Enumerations\Color\Color;
 use Assegai\Cli\Exceptions\FileException;
 use Assegai\Cli\Exceptions\NotFoundException;
 use Assegai\Cli\Exceptions\SchematicException;
 use Assegai\Cli\Interfaces\ISchematic;
-use Assegai\Cli\Util\Files;
+use Assegai\Cli\Util\Directory;
+use Assegai\Cli\Util\File;
 use Assegai\Cli\Util\Paths;
+use Phar;
 
 /**
  * The SchematicEngine is responsible for loading and constructing `Collection`s and `Schematics`. When creating
@@ -28,6 +31,8 @@ final class SchematicEngine
   private TemplateEngine $templateEngine;
 
   /**
+   * Constructs the engine.
+   *
    * @param SchematicEngineHost $host
    */
   public function __construct(protected readonly SchematicEngineHost $host)
@@ -36,7 +41,9 @@ final class SchematicEngine
   }
 
   /**
-   * @return SchematicEngineHost
+   * Returns the host.
+   *
+   * @return SchematicEngineHost The host.
    */
   public function getHost(): SchematicEngineHost
   {
@@ -44,8 +51,10 @@ final class SchematicEngine
   }
 
   /**
-   * @param string $className
-   * @return ISchematic
+   * Returns the schematic of the given class name.
+   *
+   * @param string $className The class name.
+   * @return ISchematic The schematic.
    * @throws NotFoundException
    */
   public function get(string $className): ISchematic
@@ -59,10 +68,12 @@ final class SchematicEngine
   }
 
   /**
-   * @param array $schema
-   * @param object $args
-   * @param array $globalArgs
-   * @return string
+   * Loads the schema.
+   *
+   * @param array $schema The schema.
+   * @param object $args The arguments.
+   * @param array $globalArgs The global arguments.
+   * @return string The path to the template.
    */
   public function loadSchema(array $schema, object $args, array $globalArgs): string
   {
@@ -73,8 +84,10 @@ final class SchematicEngine
   }
 
   /**
-   * @param string $templatePath
-   * @param string $outputPath
+   * Builds the schematic.
+   *
+   * @param string $templatePath The path to the template.
+   * @param string $outputPath The path to the output.
    * @return void
    * @throws FileException
    * @throws NotFoundException
@@ -100,7 +113,9 @@ final class SchematicEngine
   }
 
   /**
-   * @param bool $verbose
+   * Sets the `SchematicEngine` verbosity.
+   *
+   * @param bool $verbose The verbosity.
    */
   public function setVerbose(bool $verbose): void
   {
@@ -109,8 +124,10 @@ final class SchematicEngine
   }
 
   /**
-   * @param string $message
-   * @param bool $ignoreVerbosity
+   * Logs a message to the console. If the engine is not verbose, the message will be ignored.
+   *
+   * @param string $message The message.
+   * @param bool $ignoreVerbosity Whether to ignore the verbosity.
    * @return void
    */
   private function report(string $message, bool $ignoreVerbosity = false): void
@@ -122,8 +139,10 @@ final class SchematicEngine
   }
 
   /**
-   * @param string $sourcePath
-   * @param string $targetPath
+   * Copies the template files to the output path.
+   *
+   * @param string $sourcePath The path to the template.
+   * @param string $targetPath The path to the output.
    * @return void
    * @throws SchematicException
    */
@@ -131,11 +150,29 @@ final class SchematicEngine
   {
     $this->report(message: "Copying template files...");
 
-    $command = file_exists($targetPath) ? "cp -r -T $sourcePath $targetPath" : "cp -r $sourcePath $targetPath";
-
-    if (false === exec($command) )
+    if (is_phar_path($sourcePath))
     {
-      throw new SchematicException("Could not copy files from \n$sourcePath to\n$targetPath");
+      # Create a temporary directory
+      $temporaryDirectory = Directory::createTemporary();
+
+      # Extract the phar to the temporary directory
+      printf("%sExtracting %s to %s%s" . PHP_EOL, Color::LIGHT_BLUE, $sourcePath, $temporaryDirectory, Color::RESET);
+
+      # Copy the files from the temporary directory to the target path
+      Directory::copy($temporaryDirectory, $targetPath);
+
+      # Delete the temporary directory
+      Directory::delete($temporaryDirectory);
+      exit;
+    }
+    else
+    {
+      $command = file_exists($targetPath) ? "cp -r -T $sourcePath $targetPath" : "cp -r $sourcePath $targetPath";
+
+      if (false === exec($command) )
+      {
+        throw new SchematicException("Could not copy files from \n$sourcePath to\n$targetPath");
+      }
     }
 
     $this->log(message: sprintf("Source: %s%sTarget: %s" . PHP_EOL, $sourcePath, PHP_EOL, $targetPath));
@@ -176,7 +213,7 @@ final class SchematicEngine
           continue;
         }
         $pathsAreEqual = strcmp($activePath, $resolvedPath) === 0;
-        Files::renameFile(from: $activePath, to: $resolvedPath);
+        File::rename(from: $activePath, to: $resolvedPath);
 
         # Resolve content placeholders
         $content = file_get_contents($resolvedPath);
@@ -267,8 +304,8 @@ final class SchematicEngine
           {
             $indent = '  ';
             $pattern = $inlineMetaData
-              ? "/({$indent}{$metaProp}:\s*\[)(.*,?)(\])/"
-              : "/({$indent}{$metaProp}:\s*\[\n)(.*,?)(\n.*)/";
+              ? "/($indent$metaProp:\s*\[)(.*,?)(\])/"
+              : "/($indent$metaProp:\s*\[\n)(.*,?)(\n.*)/";
             $imports = [];
 
             foreach ($updateInstructions->$metaProp as $metaEntry)
@@ -307,8 +344,8 @@ final class SchematicEngine
               $newContent .= ',';
             }
             $replacement = $inlineMetaData
-              ? "$1$2{$separator}{$newContent}$3"
-              : "$1$2{$separator}{$indent}{$indent}{$newContent}$3";
+              ? "$1$2$separator$newContent$3"
+              : "$1$2$separator$indent$indent$newContent$3";
 
             $resolvedContent = preg_replace($pattern, $replacement, $content);
             $resolvedContent = str_replace("[$separator", '[', $resolvedContent);
@@ -338,8 +375,10 @@ final class SchematicEngine
   }
 
   /**
-   * @param string $message
-   * @param bool $ignoreVerbosity
+   * Logs a message to the console if the verbose flag is set to true.
+   *
+   * @param string $message The message to log.
+   * @param bool $ignoreVerbosity Whether to ignore the verbose flag.
    * @return void
    */
   private function log(string $message, bool $ignoreVerbosity = false): void
@@ -351,9 +390,11 @@ final class SchematicEngine
   }
 
   /**
-   * @param string|array $sourceCode
-   * @param array $namespaces
-   * @return string
+   * Updates the namespace usage list in a module file.
+   *
+   * @param string|array $sourceCode The source code to update.
+   * @param array $namespaces The namespaces to add to the usage list.
+   * @return string The updated source code.
    */
   private function updateNamespaceUsageList(string|array $sourceCode, array $namespaces): string
   {
